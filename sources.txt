@@ -4,6 +4,7 @@ http://phishing.mailscanner.info/phishing.bad.sites.conf
 http://sysctl.org/cameleon/hosts
 http://winhelp2002.mvps.org/hosts.txt
 https://adaway.org/hosts.txt
+https://badmojr.github.io/1Hosts/Lite/domains.txt
 https://easylist-downloads.adblockplus.org/easylistgermany-minified.txt
 https://easylist.to/easylist/easylist.txt
 https://gitlab.com/ookangzheng/dbl-oisd-nl/raw/master/dbl.txt
@@ -78,4 +79,3 @@ https://www.einmalzahlungzweihundert.de/bl-einmalzahlung.txt
 https://www.github.developerdan.com/hosts/lists/ads-and-tracking-extended.txt
 https://www.technoy.de/lists/blocklist.txt
 https://www.technoy.de/lists/fake-streaming.txt
-https://badmojr.github.io/1Hosts/Lite/domains.txt
