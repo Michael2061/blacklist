@@ -27,6 +27,7 @@ https://gitlab.com/TheBlockList/Blocklist/-/raw/master/samsung
 https://gitlab.com/TheBlockList/Blocklist/-/raw/master/stuff
 https://gitlab.com/TheBlockList/Blocklist/-/raw/master/tracker
 https://hostfiles.frogeye.fr/firstparty-trackers-hosts.txt
+MASTER|https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/ultimate.txt
 https://hostfiles.frogeye.fr/multiparty-trackers-hosts.txt
 https://hosts.gameindustry.eu/pc-main-template/dl/
 https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&amp;amp;showintro=1&amp;amp;mimetype=plaintext&amp;amp;_=211989
