@@ -9,7 +9,7 @@ WHITELIST_FILE = "whitelist.txt"
 OUTPUT_FILE = "blocklist.txt"
 MAX_RETRIES = 3
 
-# Erweiterte Liste geschützter Anbieter (wird nicht automatisch gelöscht, auch wenn redundant)
+# Diese Wörter im URL-Pfad schützen die Liste vor dem Löschen
 PROTECTED_KEYWORDS = [
     "oisd", "hagezi", "stevenblack", "firebog", "adaway", 
     "1hosts", "anudeepnd", "lightswitch05", "disconnect.me", "energized"
@@ -27,9 +27,7 @@ def is_subdomain(domain, domain_set):
 
 def main():
     start_time = time.time()
-    if not os.path.exists(SOURCES_FILE):
-        print(f"Fehler: {SOURCES_FILE} nicht gefunden.")
-        return
+    if not os.path.exists(SOURCES_FILE): return
 
     # 1. Whitelist laden
     whitelist = set()
@@ -71,7 +69,8 @@ def main():
                 current_line = match.group(2)
 
         url_to_fetch = current_line.replace("MASTER|", "")
-        is_protected = any(k in url_to_fetch.lower() for k in PROTECTED_KEYWORDS)
+        # NEU: Auch das Wort "MASTER" im Präfix schützt die Liste jetzt automatisch!
+        is_protected = any(k in url_to_fetch.lower() for k in PROTECTED_KEYWORDS) or "MASTER|" in line
 
         try:
             r = requests.get(url_to_fetch, timeout=20, headers={'User-Agent': 'Mozilla/5.0 DNS-Optimizer'})
@@ -93,37 +92,34 @@ def main():
                         temp_domains.append(d)
                         new_added += 1
                 
-                # Wenn die Liste geschützt ist, behalten wir sie immer
+                # Wenn geschützt (Keyword oder MASTER), behalten wir sie immer
                 if is_protected:
                     all_domains.update(temp_domains)
-                    # Kennzeichnung im Log, dass sie geschützt ist (auch bei 0 neuen)
-                    status = "PROTECT" if new_added == 0 else "OK"
+                    status = "MASTER" if "MASTER|" in line else "PROTECT"
                     print(f"{status:<8} | {new_added:>10} | {url_to_fetch}")
-                    cleaned_sources.append(current_line)
+                    cleaned_sources.append(line) # Behält das Präfix MASTER| bei
                 
-                # Wenn nicht geschützt, aber neue Domains liefert
                 elif new_added > 0:
                     all_domains.update(temp_domains)
                     print(f"{'OK':<8} | {new_added:>10} | {url_to_fetch}")
                     cleaned_sources.append(current_line)
                 
-                # Wenn nicht geschützt und 0 neue Domains liefert
                 else:
-                    print(f"{'REDUND.':<8} | {0:>10} | {url_to_fetch} -> ENTFERNT")
+                    print(f"{'REDUND.':<8} | {0:>10} | {url_to_fetch} -> ENTFERNT (Kein Mehrwert)")
             else: 
                 raise Exception()
 
         except:
             if is_protected:
-                print(f"{'OFFLINE':<8} | {'-':>10} | {url_to_fetch} (BEHALTEN)")
+                print(f"{'OFFLINE':<8} | {'-':>10} | {url_to_fetch} (MASTER/PROTECT - BEHALTEN)")
                 cleaned_sources.append(line)
             else:
                 fail_count += 1
                 if fail_count < MAX_RETRIES:
-                    print(f"{'WARN':<8} | {fail_count:>3}/{MAX_RETRIES}  | {url_to_fetch}")
+                    print(f"{'WARN':<8} | {fail_count:>3}/{MAX_RETRIES}  | {url_to_fetch} (Fehler)")
                     cleaned_sources.append(f"FAILx{fail_count}|{current_line}")
                 else:
-                    print(f"{'ERROR':<8} | {'REMOVED':>10} | {url_to_fetch}")
+                    print(f"{'ERROR':<8} | {'REMOVED':>10} | {url_to_fetch} -> ENTFERNT (Server-Fehler)")
 
     # 3. Finaler Wildcard-Check
     final_domains = sorted(list(all_domains), key=len)
