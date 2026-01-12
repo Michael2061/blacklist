@@ -1,13 +1,11 @@
-# Ultimate Sources
+# Cleaned Sources
+MASTER|https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/ultimate.txt
 http://phishing.mailscanner.info/phishing.bad.sites.conf
 http://sysctl.org/cameleon/hosts
 http://winhelp2002.mvps.org/hosts.txt
 https://adaway.org/hosts.txt
-https://big.oisd.nl/domainswild
-https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/ultimate.txt
 https://easylist-downloads.adblockplus.org/easylistgermany-minified.txt
 https://easylist.to/easylist/easylist.txt
-https://gitlab.com/hagezi/mirror/-/raw/main/dns-blocklists/domains/ultimate.txt
 https://gitlab.com/ookangzheng/dbl-oisd-nl/raw/master/dbl.txt
 https://gitlab.com/quidsup/notrack-blocklists/blob/master/notrack-malware.txt
 https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-blocklist.txt
@@ -27,7 +25,6 @@ https://gitlab.com/TheBlockList/Blocklist/-/raw/master/samsung
 https://gitlab.com/TheBlockList/Blocklist/-/raw/master/stuff
 https://gitlab.com/TheBlockList/Blocklist/-/raw/master/tracker
 https://hostfiles.frogeye.fr/firstparty-trackers-hosts.txt
-MASTER|https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/ultimate.txt
 https://hostfiles.frogeye.fr/multiparty-trackers-hosts.txt
 https://hosts.gameindustry.eu/pc-main-template/dl/
 https://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&amp;amp;showintro=1&amp;amp;mimetype=plaintext&amp;amp;_=211989
