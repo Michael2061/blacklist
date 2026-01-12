@@ -6,17 +6,20 @@ on:
     # 4:00 Uhr morgens in Deutschland (Winterzeit) ist 3:00 Uhr UTC.
     # Format: Minuten Stunden Tag Monat Wochentag
     - cron: '0 3 * * *' 
-  workflow_dispatch: # Erlaubt es dir, das Skript auch jederzeit manuell zu starten
+  workflow_dispatch: # Erlaubt manuellen Start
+
+permissions:
+  contents: write # WICHTIG: Erlaubt das Schreiben/Pushing der Änderungen
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Update auf v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5 # Update auf v5
         with:
           python-version: '3.x'
 
@@ -24,12 +27,14 @@ jobs:
         run: pip install requests
 
       - name: Run Optimizer Script
-        run: python merge.py
+        # Das -u sorgt dafür, dass die Prints sofort im Log erscheinen
+        run: python -u merge.py
 
       - name: Commit and Push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add sources.txt blocklist.txt
+          # Falls keine Änderungen da sind, bricht das Skript nicht ab
           git commit -m "Daily Update: $(date +'%Y-%m-%d %H:%M')" || exit 0
           git push
