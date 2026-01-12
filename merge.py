@@ -8,7 +8,7 @@ from collections import Counter
 # --- KONFIGURATION ---
 SOURCES_FILE = "sources.txt"
 OUTPUT_FILE = "blocklist.txt"
-PROTECTED_KEYWORDS = ["oisd", "hagezi", "stevenblack", "firebog", "adaway"]
+PROTECTED_KEYWORDS = ["oisd", "hagezi", "stevenblack", "firebog", "adaway", "badmojr"]
 DOMAIN_REGEX = r"^(?:0\.0\.0\.0|127\.0\.0\.1)?\s*([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+)"
 
 SUBDOMAIN_THRESHOLD = 10 
