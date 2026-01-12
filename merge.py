@@ -3,50 +3,51 @@ import re
 import os
 import time
 import hashlib
+from collections import Counter
 
 # --- KONFIGURATION ---
 SOURCES_FILE = "sources.txt"
 OUTPUT_FILE = "blocklist.txt"
-
-# Keywords für den Offline-Schutz (behält wichtige Quellen bei Serverfehlern)
 PROTECTED_KEYWORDS = ["oisd", "hagezi", "stevenblack", "firebog", "adaway"]
-
-# Regex zur Erkennung von Domains (filtert 0.0.0.0 etc. automatisch weg)
 DOMAIN_REGEX = r"^(?:0\.0\.0\.0|127\.0\.0\.1)?\s*([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+)"
 
+SUBDOMAIN_THRESHOLD = 10 
+MAX_FAILS = 3 
+
 def is_subdomain(domain, domain_set):
-    """Prüft, ob eine Domain bereits durch eine übergeordnete Domain abgedeckt ist."""
     parts = domain.split('.')
     for i in range(len(parts) - 1, 1, -1):
         parent = ".".join(parts[len(parts)-i:])
         if parent in domain_set: return True
     return False
 
+def get_parent_domain(domain):
+    parts = domain.split('.')
+    return ".".join(parts[-2:]) if len(parts) > 2 else domain
+
 def main():
     start_time = time.time()
-    print("--- OPTIMIZER START (No Whitelist Mode) ---")
+    print("--- OPTIMIZER START (Full Mode) ---")
 
     if not os.path.exists(SOURCES_FILE):
         print(f"ERROR: {SOURCES_FILE} nicht gefunden.")
         return
 
-    # 1. Quellen einlesen & URL-Deduplizierung
+    # 1. Quellen einlesen
     with open(SOURCES_FILE, "r") as f:
         raw_lines = [l.strip() for l in f if l.strip() and not l.startswith("#")]
     
     url_map = {}
     for line in raw_lines:
-        clean_url = line.replace("MASTER|", "").replace("FAILx1|", "").replace("FAILx2|", "").lower().strip("/")
+        clean_url = re.sub(r"^(MASTER\||FAILx\d+\|)+", "", line).lower().strip("/")
         if clean_url not in url_map or "MASTER|" in line:
             url_map[clean_url] = line
     
     unique_urls = list(url_map.values())
-    # MASTER-Quellen nach oben sortieren
     unique_urls.sort(key=lambda x: (not ("MASTER|" in x), x.lower()))
 
     all_domains = set()
     content_hashes = {}
-    source_history = []
     cleaned_sources = []
     total_raw_domains = 0 
     
@@ -54,16 +55,19 @@ def main():
     print("-" * 110)
 
     for line in unique_urls:
-        url_to_fetch = line.replace("MASTER|", "").replace("FAILx1|", "").replace("FAILx2|", "")
+        is_master = "MASTER|" in line
+        fail_match = re.search(r"FAILx(\d+)\|", line)
+        current_fails = int(fail_match.group(1)) if fail_match else 0
+        
+        url_to_fetch = re.sub(r"^(MASTER\||FAILx\d+\|)+", "", line)
         file_name = url_to_fetch.split('/')[-1] or url_to_fetch
         
         try:
             r = requests.get(url_to_fetch, timeout=20, headers={'User-Agent': 'Mozilla/5.0'})
             if r.status_code == 200:
-                # Mirror-Check via MD5 Hash
                 m = hashlib.md5(r.text.encode('utf-8')).hexdigest()
-                if m in content_hashes and "MASTER|" not in line:
-                    print(f"{'MIRROR':<8} | {0:>10} | {url_to_fetch} (Identisch mit {content_hashes[m]})")
+                if m in content_hashes and not is_master:
+                    print(f"{'MIRROR':<8} | {0:>10} | {url_to_fetch}")
                     continue
 
                 current_list = set()
@@ -73,46 +77,51 @@ def main():
                         current_list.add(d_match.group(1).lower())
                 
                 total_raw_domains += len(current_list)
-                
-                # Nur Domains hinzufügen, die noch nicht bekannt oder durch Wildcards abgedeckt sind
                 temp_new = [d for d in current_list if d not in all_domains and not is_subdomain(d, all_domains)]
-                new_count = len(temp_new)
-
-                if new_count > 0 or "MASTER|" in line:
+                
+                if len(temp_new) > 0 or is_master:
                     all_domains.update(temp_new)
                     content_hashes[m] = file_name
-                    source_history.append((file_name, current_list))
-                    status = "MASTER" if "MASTER|" in line else "OK"
-                    print(f"{status:<8} | {new_count:>10} | {url_to_fetch}")
-                    cleaned_sources.append(line)
+                    cleaned_sources.append(f"MASTER|{url_to_fetch}" if is_master else url_to_fetch)
+                    status = "MASTER" if is_master else "OK"
+                    print(f"{status:<8} | {len(temp_new):>10} | {url_to_fetch}")
                 else:
-                    print(f"{'REDUND.':<8} | {0:>10} | {url_to_fetch} -> ENTFERNT")
+                    print(f"{'REDUND.':<8} | {0:>10} | {url_to_fetch}")
             else: raise Exception()
-        except:
-            if "MASTER|" in line or any(k in url_to_fetch.lower() for k in PROTECTED_KEYWORDS):
-                print(f"{'OFFLINE':<8} | {'-':>10} | {url_to_fetch} (BEHALTEN)")
-                cleaned_sources.append(line)
+
+        except Exception:
+            new_fails = current_fails + 1
+            is_protected = any(k in url_to_fetch.lower() for k in PROTECTED_KEYWORDS)
+            if new_fails < MAX_FAILS or is_master or is_protected:
+                prefix = "MASTER|" if is_master else ""
+                cleaned_sources.append(f"{prefix}FAILx{new_fails}|{url_to_fetch}")
+                print(f"{'OFFLINE':<8} | {'Try ' + str(new_fails):>10} | {url_to_fetch}")
             else:
-                print(f"{'ERROR':<8} | {'REMOVED':>10} | {url_to_fetch}")
+                print(f"{'DEAD':<8} | {'REMOVED':>10} | {url_to_fetch}")
 
-    # 2. Finaler Optimierungslauf (Subdomains entfernen)
-    final_raw_list = sorted(list(all_domains), key=len)
-    optimized_set = set()
-    for d in final_raw_list:
-        if not is_subdomain(d, optimized_set):
-            optimized_set.add(d)
+    # 2. TLD-AGGREGATION
+    print("\nOptimiere Subdomains (Aggregation)...")
+    parent_counts = Counter(get_parent_domain(d) for d in all_domains)
+    auto_wildcards = {dom for dom, count in parent_counts.items() if count >= SUBDOMAIN_THRESHOLD}
+    
+    final_set = set()
+    final_set.update(auto_wildcards)
+    for d in all_domains:
+        if get_parent_domain(d) not in auto_wildcards:
+            if not is_subdomain(d, final_set):
+                final_set.add(d)
 
-    # 3. Dateien speichern
+    # 3. Speichern
     with open(OUTPUT_FILE, "w") as f:
-        f.write(f"# Optimized Blocklist\n# Total Domains: {len(optimized_set)}\n")
-        for d in sorted(optimized_set): f.write(d + "\n")
+        f.write(f"# Optimized Blocklist\n# Total Domains: {len(final_set)}\n")
+        for d in sorted(final_set): f.write(d + "\n")
 
     with open(SOURCES_FILE, "w") as f:
         f.write("# Cleaned Sources\n")
         for s in cleaned_sources: f.write(s + "\n")
 
-    # --- STATISTIK-AUSGABE ---
-    final_count = len(optimized_set)
+    # --- DETAILLIERTE STATISTIK ---
+    final_count = len(final_set)
     removed_count = total_raw_domains - final_count
     reduction_pct = (removed_count / total_raw_domains * 100) if total_raw_domains > 0 else 0
     duration = time.time() - start_time
@@ -121,7 +130,8 @@ def main():
     print(f"ZUSAMMENFASSUNG:")
     print(f"  - Brutto-Domains (Rohdaten):      {total_raw_domains:,}".replace(",", "."))
     print(f"  - Netto-Domains (blocklist.txt):  {final_count:,}".replace(",", "."))
-    print(f"  - Ersparnis (Müll entfernt):      {removed_count:,}".replace(",", "."))
+    print(f"  - Davon Auto-Wildcards (TLDs):    {len(auto_wildcards):,}".replace(",", "."))
+    print(f"  - Ersparnis (Müll & Aggregation): {removed_count:,}".replace(",", "."))
     print(f"  - Effizienz-Steigerung:           {reduction_pct:.2f}%")
     print(f"  - Bearbeitungszeit:               {duration:.2f} Sekunden")
     print("-" * 110)
