@@ -7,6 +7,7 @@ https://big.oisd.nl/domainswild
 https://cdn.jsdelivr.net/gh/hagezi/dns-blocklists@latest/domains/ultimate.txt
 https://easylist-downloads.adblockplus.org/easylistgermany-minified.txt
 https://easylist.to/easylist/easylist.txt
+https://gitlab.com/hagezi/mirror/-/raw/main/dns-blocklists/domains/ultimate.txt
 https://gitlab.com/ookangzheng/dbl-oisd-nl/raw/master/dbl.txt
 https://gitlab.com/quidsup/notrack-blocklists/blob/master/notrack-malware.txt
 https://gitlab.com/quidsup/notrack-blocklists/raw/master/notrack-blocklist.txt
@@ -79,4 +80,3 @@ https://www.einmalzahlungzweihundert.de/bl-einmalzahlung.txt
 https://www.github.developerdan.com/hosts/lists/ads-and-tracking-extended.txt
 https://www.technoy.de/lists/blocklist.txt
 https://www.technoy.de/lists/fake-streaming.txt
-https://gitlab.com/hagezi/mirror/-/raw/main/dns-blocklists/domains/ultimate.txt
