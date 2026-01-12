@@ -79,3 +79,4 @@ https://www.einmalzahlungzweihundert.de/bl-einmalzahlung.txt
 https://www.github.developerdan.com/hosts/lists/ads-and-tracking-extended.txt
 https://www.technoy.de/lists/blocklist.txt
 https://www.technoy.de/lists/fake-streaming.txt
+https://gitlab.com/hagezi/mirror/-/raw/main/dns-blocklists/domains/ultimate.txt

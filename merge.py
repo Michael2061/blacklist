@@ -9,15 +9,13 @@ WHITELIST_FILE = "whitelist.txt"
 OUTPUT_FILE = "blocklist.txt"
 MAX_RETRIES = 3
 
-# Diese Wörter im URL-Pfad schützen die Liste vor dem Löschen
-PROTECTED_KEYWORDS = [
-    "oisd", "hagezi", "stevenblack", "firebog", "adaway", 
-    "1hosts", "anudeepnd", "lightswitch05", "disconnect.me", "energized"
-]
+# Diese Wörter im URL-Pfad schützen die Liste vor dem automatischen Löschen
+PROTECTED_KEYWORDS = ["oisd", "hagezi", "stevenblack", "firebog", "adaway", "1hosts"]
 
 DOMAIN_REGEX = r"^(?:0\.0\.0\.0|127\.0\.0\.1)?\s*([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+)"
 
 def is_subdomain(domain, domain_set):
+    """Prüft auf Wildcard-Redundanz (Subdomains)."""
     parts = domain.split('.')
     for i in range(len(parts) - 1, 1, -1):
         parent = ".".join(parts[len(parts)-i:])
@@ -27,7 +25,9 @@ def is_subdomain(domain, domain_set):
 
 def main():
     start_time = time.time()
-    if not os.path.exists(SOURCES_FILE): return
+    if not os.path.exists(SOURCES_FILE):
+        print(f"ERROR: {SOURCES_FILE} nicht gefunden!")
+        return
 
     # 1. Whitelist laden
     whitelist = set()
@@ -35,11 +35,16 @@ def main():
         with open(WHITELIST_FILE, "r") as f:
             whitelist = {l.strip().lower() for l in f if l.strip() and not l.startswith("#")}
 
-    # 2. Quellen einlesen & Sortieren
+    # 2. Quellen einlesen
     with open(SOURCES_FILE, "r") as f:
         raw_lines = [l.strip() for l in f if l.strip() and not l.startswith("#")]
     
     unique_urls = list(dict.fromkeys(raw_lines))
+    
+    # DEBUG-INFO am Anfang
+    print(f"DEBUG: {len(unique_urls)} Quellen in {SOURCES_FILE} gefunden.")
+    
+    # Sortierung: MASTER-Listen zuerst
     unique_urls.sort(key=lambda x: (
         not ("MASTER|" in x), 
         x.replace("FAILx1|", "").replace("FAILx2|", "").replace("MASTER|", "").lower()
@@ -50,10 +55,11 @@ def main():
     total_raw_domains = 0
     master_finished = False
     
-    print(f"{'STATUS':<8} | {'NEUE':>10} | {'QUELLE / URL'}")
+    print(f"\n{'STATUS':<8} | {'NEUE':>10} | {'QUELLE / URL'}")
     print("-" * 110)
 
     for line in unique_urls:
+        # Trenner nach Master-Listen
         if not master_finished and "MASTER|" not in line:
             if any("MASTER|" in l for l in unique_urls):
                 print(f"{'INFO':<8} | {'-'*10} | --- ENDE DER MASTER-QUELLEN ---")
@@ -62,6 +68,7 @@ def main():
         fail_count = 0
         current_line = line
         
+        # FAIL-Zähler verarbeiten
         if current_line.startswith("FAILx"):
             match = re.match(r"FAILx(\d+)\|(.+)", current_line)
             if match:
@@ -69,11 +76,10 @@ def main():
                 current_line = match.group(2)
 
         url_to_fetch = current_line.replace("MASTER|", "")
-        # NEU: Auch das Wort "MASTER" im Präfix schützt die Liste jetzt automatisch!
         is_protected = any(k in url_to_fetch.lower() for k in PROTECTED_KEYWORDS) or "MASTER|" in line
 
         try:
-            r = requests.get(url_to_fetch, timeout=20, headers={'User-Agent': 'Mozilla/5.0 DNS-Optimizer'})
+            r = requests.get(url_to_fetch, timeout=25, headers={'User-Agent': 'Mozilla/5.0 DNS-Optimizer'})
             
             if r.status_code == 200 and "<html>" not in r.text[:500].lower():
                 current_list = set()
@@ -88,40 +94,39 @@ def main():
                 new_added = 0
                 temp_domains = []
                 for d in current_list:
+                    # Dubletten und Subdomain-Check
                     if d not in all_domains and not is_subdomain(d, all_domains):
                         temp_domains.append(d)
                         new_added += 1
                 
-                # Wenn geschützt (Keyword oder MASTER), behalten wir sie immer
+                # Schutz-Logik
                 if is_protected:
                     all_domains.update(temp_domains)
                     status = "MASTER" if "MASTER|" in line else "PROTECT"
                     print(f"{status:<8} | {new_added:>10} | {url_to_fetch}")
-                    cleaned_sources.append(line) # Behält das Präfix MASTER| bei
-                
+                    cleaned_sources.append(line)
                 elif new_added > 0:
                     all_domains.update(temp_domains)
                     print(f"{'OK':<8} | {new_added:>10} | {url_to_fetch}")
                     cleaned_sources.append(current_line)
-                
                 else:
-                    print(f"{'REDUND.':<8} | {0:>10} | {url_to_fetch} -> ENTFERNT (Kein Mehrwert)")
+                    print(f"{'REDUND.':<8} | {0:>10} | {url_to_fetch} -> ENTFERNT")
             else: 
                 raise Exception()
 
         except:
             if is_protected:
-                print(f"{'OFFLINE':<8} | {'-':>10} | {url_to_fetch} (MASTER/PROTECT - BEHALTEN)")
+                print(f"{'OFFLINE':<8} | {'-':>10} | {url_to_fetch} (BEHALTEN)")
                 cleaned_sources.append(line)
             else:
                 fail_count += 1
                 if fail_count < MAX_RETRIES:
-                    print(f"{'WARN':<8} | {fail_count:>3}/{MAX_RETRIES}  | {url_to_fetch} (Fehler)")
+                    print(f"{'WARN':<8} | {fail_count:>3}/{MAX_RETRIES}  | {url_to_fetch}")
                     cleaned_sources.append(f"FAILx{fail_count}|{current_line}")
                 else:
-                    print(f"{'ERROR':<8} | {'REMOVED':>10} | {url_to_fetch} -> ENTFERNT (Server-Fehler)")
+                    print(f"{'ERROR':<8} | {'REMOVED':>10} | {url_to_fetch}")
 
-    # 3. Finaler Wildcard-Check
+    # 3. Finaler Wildcard-Check (Optimierung)
     final_domains = sorted(list(all_domains), key=len)
     optimized_set = set()
     for d in final_domains:
@@ -137,7 +142,7 @@ def main():
         f.write("# Ultimate Sources\n")
         for s in cleaned_sources: f.write(f"{s}\n")
 
-    # Statistik-Ausgabe
+    # --- STATISTIK-AUSGABE ---
     duration = time.time() - start_time
     final_count = len(optimized_set)
     removed_count = total_raw_domains - final_count
