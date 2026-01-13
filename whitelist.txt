@@ -45,3 +45,31 @@ jtvnw.net
 .jtvnw.net
 twitchsvc.net
 .twitchsvc.net
+
+# --- Steam ---
+steampowered.com
+.steampowered.com
+steamcommunity.com
+.steamcommunity.com
+steamgames.com
+.steamgames.com
+steamusercontent.com
+.steamusercontent.com
+steamstatic.com
+.steamstatic.com
+steamcontent.com
+.steamcontent.com
+
+# --- Epic Games ---
+epicgames.com
+.epicgames.com
+help.epicgames.com
+.help.epicgames.com
+unrealengine.com
+.unrealengine.com
+
+# --- GOG (Good Old Games) ---
+gog.com
+.gog.com
+gog-statics.com
+.gog-statics.com
