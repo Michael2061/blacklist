@@ -62,8 +62,11 @@ def main():
         url_to_fetch = re.sub(r"^(MASTER\||FAILx\d+\|)+", "", line)
         file_name = url_to_fetch.split('/')[-1] or url_to_fetch
         
+        # --- HIER DIE PAUSE EINFÜGEN ---
+        time.sleep(1)
+
         try:
-            r = requests.get(url_to_fetch, timeout=20, headers={'User-Agent': 'Mozilla/5.0'})
+            r = requests.get(url_to_fetch, timeout=60, headers={'User-Agent': 'Mozilla/5.0'})
             if r.status_code == 200:
                 m = hashlib.md5(r.text.encode('utf-8')).hexdigest()
                 if m in content_hashes and not is_master:
