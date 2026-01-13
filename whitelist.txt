@@ -33,3 +33,15 @@ scdn.co
 .scdn.co
 spotifycdn.com
 .spotifycdn.com
+
+# --- Twitch ---
+twitch.tv
+.twitch.tv
+twitchcdn.net
+.twitchcdn.net
+ttvnw.net
+.ttvnw.net
+jtvnw.net
+.jtvnw.net
+twitchsvc.net
+.twitchsvc.net
