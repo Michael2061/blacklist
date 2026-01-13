@@ -85,3 +85,7 @@ easyanticheat.net
 .easyanticheat.net
 easy.ac
 .easy.ac
+
+# --- Online Zeitungen ---
+bild.de
+.bild.de
