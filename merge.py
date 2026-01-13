@@ -139,3 +139,15 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    try:
+        with open("version.txt", "w") as f:
+            f.write(f"Zuletzt aktualisiert: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        print("Wachmacher-Zeitstempel (version.txt) wurde aktualisiert.")
+    except Exception as e:
+        print(f"Hinweis: version.txt konnte nicht erstellt werden ({e})")   
+
+if __name__ == "__main__":
+    main()
+
+    
