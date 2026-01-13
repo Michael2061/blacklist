@@ -73,3 +73,15 @@ gog.com
 .gog.com
 gog-statics.com
 .gog-statics.com
+
+# --- Dead by Daylight & Behaviour Interactive ---
+bhvr.com
+.bhvr.com
+deadbydaylight.com
+.deadbydaylight.com
+
+# --- Easy Anti-Cheat (Wichtig für viele Online-Spiele) ---
+easyanticheat.net
+.easyanticheat.net
+easy.ac
+.easy.ac
