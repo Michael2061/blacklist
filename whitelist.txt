@@ -1,0 +1,35 @@
+# --- Microsoft & Office 365 ---
+microsoft.com
+.microsoft.com
+microsoftonline.com
+.microsoftonline.com
+office.com
+.office.com
+office365.com
+.office365.com
+live.com
+.live.com
+outlook.com
+.outlook.com
+msftncsi.com
+.msftncsi.com
+visualstudio.com
+.visualstudio.com
+
+# --- Netflix ---
+netflix.com
+.netflix.com
+nflxext.com
+.nflxext.com
+nflximg.net
+.nflximg.net
+nflxvideo.net
+.nflxvideo.net
+
+# --- Spotify ---
+spotify.com
+.spotify.com
+scdn.co
+.scdn.co
+spotifycdn.com
+.spotifycdn.com
