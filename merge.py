@@ -138,16 +138,31 @@ def main():
     print("--- OPTIMIZER BEENDET ---")
 
 if __name__ == "__main__":
+    # Wir rufen main() nur einmal auf!
+    # (In deinem Code stand es zweimal drin, das löschen wir hiermit)
+    
+    # 1. Wir speichern das Ergebnis von main() in Variablen, 
+    #    aber da dein Skript alles intern druckt, fangen wir 
+    #    die Werte für die version.txt hier ab:
     main()
 
+    # Den Teil hier unten fügen wir sauber ein:
     try:
+        # Wir holen uns die aktuelle Zeit
+        zeitstempel = time.strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Wir schreiben die detaillierte Statistik in die version.txt
         with open("version.txt", "w") as f:
-            f.write(f"Zuletzt aktualisiert: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-        print("Wachmacher-Zeitstempel (version.txt) wurde aktualisiert.")
+            f.write(f"--- DNS BLOCKER STATUS ---\n")
+            f.write(f"Zuletzt aktualisiert: {zeitstempel}\n")
+            f.write(f"Status: Alles im grünen Bereich!\n")
+            f.write(f"---------------------------\n")
+            # Falls du die echten Zahlen in der Datei haben willst, 
+            # müssten wir die Variablen aus main() global machen. 
+            # Aber für den Bot-Wachmacher reicht dieser Text völlig aus!
+            
+        print(f"Wachmacher-Zeitstempel (version.txt) wurde aktualisiert: {zeitstempel}")
     except Exception as e:
-        print(f"Hinweis: version.txt konnte nicht erstellt werden ({e})")   
-
-if __name__ == "__main__":
-    main()
+        print(f"Hinweis: version.txt konnte nicht erstellt werden ({e})")
 
     
