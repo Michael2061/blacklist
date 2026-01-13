@@ -89,3 +89,7 @@ easy.ac
 # --- Online Zeitungen ---
 bild.de
 .bild.de
+bildstatic.de
+.bildstatic.de
+asadcdn.com
+.asadcdn.com
