@@ -2,7 +2,6 @@ name: Daily Blocklist Update
 
 on:
   schedule:
-    # 16:00 UTC ist 17:00 Uhr in Deutschland/Österreich/Schweiz
     - cron: '0 3 * * *' 
   workflow_dispatch: # Damit du ihn jetzt sofort testen kannst
 
