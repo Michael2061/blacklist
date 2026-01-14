@@ -2,21 +2,22 @@ name: Daily Blocklist Update
 
 on:
   schedule:
-    # Die Zeit wird in UTC (Weltzeit) angegeben. 
-    # 4:00 Uhr morgens in Deutschland (Winterzeit) ist 3:00 Uhr UTC.
-    # Format: Minuten Stunden Tag Monat Wochentag
-    - cron: '0 16 * * *' 
-  workflow_dispatch: # Erlaubt es dir, das Skript auch jederzeit manuell zu starten
+    # 16:00 UTC ist 17:00 Uhr in Deutschland/Österreich/Schweiz
+    - cron: '0 3 * * *' 
+  workflow_dispatch: # Damit du ihn jetzt sofort testen kannst
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
 
@@ -30,6 +31,12 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add sources.txt blocklist.txt
+          
+          # Wir schreiben IMMER das Datum, damit GitHub Action aktiv bleibt
+          echo "Last Update: $(date +'%Y-%m-%d %H:%M')" > version.txt
+          
+          git add sources.txt blocklist.txt version.txt
+          
+          # Das '|| exit 0' sorgt dafür, dass alles GRÜN bleibt, selbst wenn es keine Änderungen gab
           git commit -m "Daily Update: $(date +'%Y-%m-%d %H:%M')" || exit 0
           git push
