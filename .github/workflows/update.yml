@@ -2,22 +2,18 @@ name: Daily Blocklist Update
 
 on:
   schedule:
-    # 03:37 Uhr UTC ist weniger ausgelastet als 03:00 Uhr
-    - cron: '0 6 * * *' 
-  workflow_dispatch: # Erlaubt manuellen Start
-
-permissions:
-  contents: write # WICHTIG: Erlaubt das Schreiben/Pushing der Änderungen
+    - cron: '0 16 * * *' 
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # Aktualisiert auf v4 (schneller)
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v5 # Aktualisiert auf v5
         with:
           python-version: '3.x'
 
@@ -25,19 +21,16 @@ jobs:
         run: pip install requests
 
       - name: Run Optimizer Script
-        # Das -u sorgt dafür, dass die Prints sofort im Log erscheinen
-        run: python -u merge.py
+        run: python merge.py
 
       - name: Commit and Push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Der Wachmacher: Wir schreiben das aktuelle Datum in eine version.txt
+          # Das hier ist der "Wachmacher" für deinen alten Code:
           echo "Last Update: $(date +'%Y-%m-%d %H:%M')" > version.txt
           
           git add sources.txt blocklist.txt version.txt
-          
-          # Wir commiten immer, da sich die version.txt ja auf jeden Fall geändert hat
-          git commit -m "Daily Update: $(date +'%Y-%m-%d %H:%M')"
+          git commit -m "Daily Update: $(date +'%Y-%m-%d %H:%M')" || exit 0
           git push
