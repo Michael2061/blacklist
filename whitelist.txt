@@ -97,9 +97,19 @@ asadcdn.com
 # --- Joyn ---
 joyn.at
 joyn.de
-joyn.at.akamaized.net
 joyn.plus
 71i.at
 viamotion.com
-prosiebensat1.com
 mparticle.com
+akamaized.net
+
+# --- Apple ---
+apple.com
+icloud.com
+icloud-content.com
+mzstatic.com
+itunes.apple.com
+apple-cloudkit.com
+apple-livephotoskit.com
+aaplimg.com
+cdn-apple.com
