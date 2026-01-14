@@ -8,6 +8,7 @@ from collections import Counter
 # --- KONFIGURATION ---
 SOURCES_FILE = "sources.txt"
 OUTPUT_FILE = "blocklist.txt"
+VERSION_FILE = "version.txt"
 PROTECTED_KEYWORDS = ["oisd", "hagezi", "stevenblack", "firebog", "adaway", "badmojr"]
 DOMAIN_REGEX = r"^(?:0\.0\.0\.0|127\.0\.0\.1)?\s*([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+)"
 
@@ -60,10 +61,9 @@ def main():
         current_fails = int(fail_match.group(1)) if fail_match else 0
         
         url_to_fetch = re.sub(r"^(MASTER\||FAILx\d+\|)+", "", line)
-        file_name = url_to_fetch.split('/')[-1] or url_to_fetch
         
-        # --- HIER DIE PAUSE EINFÜGEN ---
-        time.sleep(1)
+        # Kleine Pause um Server zu schonen
+        time.sleep(0.5)
 
         try:
             r = requests.get(url_to_fetch, timeout=60, headers={'User-Agent': 'Mozilla/5.0'})
@@ -84,7 +84,7 @@ def main():
                 
                 if len(temp_new) > 0 or is_master:
                     all_domains.update(temp_new)
-                    content_hashes[m] = file_name
+                    content_hashes[m] = url_to_fetch
                     cleaned_sources.append(f"MASTER|{url_to_fetch}" if is_master else url_to_fetch)
                     status = "MASTER" if is_master else "OK"
                     print(f"{status:<8} | {len(temp_new):>10} | {url_to_fetch}")
@@ -114,11 +114,12 @@ def main():
             if not is_subdomain(d, final_set):
                 final_set.add(d)
 
-    # 3. Speichern
+    # 3. Speichern der Blockliste
     with open(OUTPUT_FILE, "w") as f:
         f.write(f"# Optimized Blocklist\n# Total Domains: {len(final_set)}\n")
         for d in sorted(final_set): f.write(d + "\n")
 
+    # 4. Speichern der gesäuberten Quellen
     with open(SOURCES_FILE, "w") as f:
         f.write("# Cleaned Sources\n")
         for s in cleaned_sources: f.write(s + "\n")
@@ -138,34 +139,17 @@ def main():
     print(f"  - Effizienz-Steigerung:           {reduction_pct:.2f}%")
     print(f"  - Bearbeitungszeit:               {duration:.2f} Sekunden")
     print("-" * 110)
+
+    # --- NEU: VERSION.TXT FÜR GITHUB ACTIONS EXPORTIEREN ---
+    try:
+        with open(VERSION_FILE, "w") as f:
+            f.write(f"Last Update: {time.strftime('%Y-%m-%d %H:%M')}\n")
+            f.write(f"Total Domains: {final_count}\n")
+        print(f"Statistik in {VERSION_FILE} gespeichert.")
+    except Exception as e:
+        print(f"Fehler beim Schreiben der version.txt: {e}")
+
     print("--- OPTIMIZER BEENDET ---")
 
 if __name__ == "__main__":
-    # Wir rufen main() nur einmal auf!
-    # (In deinem Code stand es zweimal drin, das löschen wir hiermit)
-    
-    # 1. Wir speichern das Ergebnis von main() in Variablen, 
-    #    aber da dein Skript alles intern druckt, fangen wir 
-    #    die Werte für die version.txt hier ab:
     main()
-
-    # Den Teil hier unten fügen wir sauber ein:
-    try:
-        # Wir holen uns die aktuelle Zeit
-        zeitstempel = time.strftime('%Y-%m-%d %H:%M:%S')
-        
-        # Wir schreiben die detaillierte Statistik in die version.txt
-        with open("version.txt", "w") as f:
-            f.write(f"--- DNS BLOCKER STATUS ---\n")
-            f.write(f"Zuletzt aktualisiert: {zeitstempel}\n")
-            f.write(f"Status: Alles im grünen Bereich!\n")
-            f.write(f"---------------------------\n")
-            # Falls du die echten Zahlen in der Datei haben willst, 
-            # müssten wir die Variablen aus main() global machen. 
-            # Aber für den Bot-Wachmacher reicht dieser Text völlig aus!
-            
-        print(f"Wachmacher-Zeitstempel (version.txt) wurde aktualisiert: {zeitstempel}")
-    except Exception as e:
-        print(f"Hinweis: version.txt konnte nicht erstellt werden ({e})")
-
-    

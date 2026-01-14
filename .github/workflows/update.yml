@@ -32,11 +32,16 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Wir schreiben IMMER das Datum, damit GitHub Action aktiv bleibt
-          echo "Last Update: $(date +'%Y-%m-%d %H:%M')" > version.txt
+          # 1. Den alten Stand aus der vorhandenen version.txt extrahieren (bevor sie überschrieben wird)
+          # Wir suchen nach der Zahl hinter "Total Domains:"
+          OLD_COUNT=$(grep "Total Domains:" version.txt | grep -oP '\d+' || echo "0")
           
-          git add sources.txt blocklist.txt version.txt
+          # 2. Das Python-Skript hat die NEUE version.txt bereits erstellt.
+          # Wir holen uns die neue Zahl für die Commit-Nachricht
+          NEW_COUNT=$(grep "Total Domains:" version.txt | grep -oP '\d+' || echo "0")
           
-          # Das '|| exit 0' sorgt dafür, dass alles GRÜN bleibt, selbst wenn es keine Änderungen gab
-          git commit -m "Daily Update: $(date +'%Y-%m-%d %H:%M')" || exit 0
+          git add blocklist.txt version.txt sources.txt
+          
+          # 3. Der Commit zeigt dir jetzt sofort die Differenz!
+          git commit -m "Update: $OLD_COUNT -> $NEW_COUNT Domains" || exit 0
           git push
