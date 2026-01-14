@@ -3,7 +3,7 @@ name: Daily Blocklist Update
 on:
   schedule:
     # 03:37 Uhr UTC ist weniger ausgelastet als 03:00 Uhr
-    - cron: '37 3 * * *' 
+    - cron: '0 6 * * *' 
   workflow_dispatch: # Erlaubt manuellen Start
 
 permissions:
@@ -33,13 +33,11 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # Hier fügen wir alle drei Dateien hinzu (Wichtig für den Wachmacher!)
+          # Der Wachmacher: Wir schreiben das aktuelle Datum in eine version.txt
+          echo "Last Update: $(date +'%Y-%m-%d %H:%M')" > version.txt
+          
           git add sources.txt blocklist.txt version.txt
           
-          # Wir prüfen, ob es Änderungen gibt, bevor wir committen
-          if ! git diff --cached --quiet; then
-            git commit -m "Daily Update: $(date +'%Y-%m-%d %H:%M')"
-            git push
-          else
-            echo "Keine Änderungen zum Committen gefunden."
-          fi
+          # Wir commiten immer, da sich die version.txt ja auf jeden Fall geändert hat
+          git commit -m "Daily Update: $(date +'%Y-%m-%d %H:%M')"
+          git push
