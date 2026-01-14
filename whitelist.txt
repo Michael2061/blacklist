@@ -93,3 +93,13 @@ bildstatic.de
 .bildstatic.de
 asadcdn.com
 .asadcdn.com
+
+# --- Joyn ---
+joyn.at
+joyn.de
+joyn.at.akamaized.net
+joyn.plus
+71i.at
+viamotion.com
+prosiebensat1.com
+mparticle.com
