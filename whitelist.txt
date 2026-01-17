@@ -1,36 +1,94 @@
-# Microsoft & Office
+# --- MICROSOFT & OFFICE 365 ---
 microsoft.com
 office.com
 office365.com
+live.com
 outlook.com
+msn.com
 visualstudio.com
-github.com
-githubusercontent.com
+windows.com
+windowsupdate.com
+sfx.ms
+aspnetcdn.com
 
-# Streaming
-netflix.com
-nflxvideo.net
-spotify.com
-twitch.tv
-ttvnmain.net
-
-# Gaming & Anti-Cheat
+# --- GAMING (Steam, Epic, Nintendo, Sony) ---
 steampowered.com
 steamcommunity.com
+steamstatic.com
 epicgames.com
 gog.com
 nintendo.com
 nintendo.net
-battleye.com
-easy_anticheat.net
+nintendo.it
+playstation.net
+sonyentertainmentnetwork.com
+xboxlive.com
+ea.com
+origin.com
 
-# Apple
+# --- STREAMING ---
+netflix.com
+nflxvideo.net
+nflxso.net
+nflxext.com
+spotify.com
+scdn.co
+twitch.tv
+ttvnmain.net
+disneyplus.com
+dssott.com
+amazon.de
+amazon-adsystem.com
+
+# --- APPLE ---
 apple.com
 icloud.com
 mzstatic.com
+aaplimg.com
+cdn-apple.com
+me.com
 
-# Media & News (Beispiele)
+# --- TOOLS & MEDIA ---
+github.com
+githubusercontent.com
 joyn.at
 joyn.de
-bild.de
 orf.at
+bild.de
+google.com
+gstatic.com
+googleusercontent.com
+
+# --- ANTI-CHEAT & TECHNIK ---
+battleye.com
+easy_anticheat.net
+vanguard.com
+
+# --- PAYMENT & AUTH ---
+paypal.com
+paypalobjects.com
+stripe.com
+klarna.com
+mastercard.com
+visa.com
+apple-pay.com
+
+# --- GOOGLE ESSENTIALS ---
+google.com
+gstatic.com
+googleapis.com
+googleusercontent.com
+recaptcha.net
+google-analytics.com  # Falls du Analyse-Tools auf eigenen Seiten nutzt
+
+# --- SMART HOME ---
+amazon.com
+amazonaws.com        # Wichtig: Viele Apps speichern hier ihre Daten!
+aiv-delivery.net     # Prime Video
+shatter-delivery.net # Prime Video
+
+# --- OTHERS ---
+adobe.com
+okta.com             # Wichtig für Firmen-Logins
+zoom.us
+teams.microsoft.com
