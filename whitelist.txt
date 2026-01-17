@@ -1,115 +1,67 @@
-# --- Microsoft & Office 365 ---
-microsoft.com
-.microsoft.com
-microsoftonline.com
-.microsoftonline.com
-office.com
-.office.com
-office365.com
-.office365.com
-live.com
-.live.com
-outlook.com
-.outlook.com
-msftncsi.com
-.msftncsi.com
-visualstudio.com
-.visualstudio.com
-
-# --- Netflix ---
-netflix.com
-.netflix.com
-nflxext.com
-.nflxext.com
-nflximg.net
-.nflximg.net
-nflxvideo.net
-.nflxvideo.net
-
-# --- Spotify ---
-spotify.com
-.spotify.com
-scdn.co
-.scdn.co
-spotifycdn.com
-.spotifycdn.com
-
-# --- Twitch ---
-twitch.tv
-.twitch.tv
-twitchcdn.net
-.twitchcdn.net
-ttvnw.net
-.ttvnw.net
-jtvnw.net
-.jtvnw.net
-twitchsvc.net
-.twitchsvc.net
-
-# --- Steam ---
-steampowered.com
-.steampowered.com
-steamcommunity.com
-.steamcommunity.com
-steamgames.com
-.steamgames.com
-steamusercontent.com
-.steamusercontent.com
-steamstatic.com
-.steamstatic.com
-steamcontent.com
-.steamcontent.com
-
-# --- Epic Games ---
-epicgames.com
-.epicgames.com
-help.epicgames.com
-.help.epicgames.com
-unrealengine.com
-.unrealengine.com
-
-# --- GOG (Good Old Games) ---
-gog.com
-.gog.com
-gog-statics.com
-.gog-statics.com
-
-# --- Dead by Daylight & Behaviour Interactive ---
-bhvr.com
-.bhvr.com
-deadbydaylight.com
-.deadbydaylight.com
-
-# --- Easy Anti-Cheat (Wichtig für viele Online-Spiele) ---
-easyanticheat.net
-.easyanticheat.net
-easy.ac
-.easy.ac
-
-# --- Online Zeitungen ---
-bild.de
-.bild.de
-bildstatic.de
-.bildstatic.de
-asadcdn.com
-.asadcdn.com
-
-# --- Joyn ---
-joyn.at
-joyn.de
-joyn.plus
-71i.at
-viamotion.com
-mparticle.com
-akamaized.net
-
 # --- Apple ---
-apple.com
-icloud.com
-icloud-content.com
-mzstatic.com
-itunes.apple.com
-apple-cloudkit.com
-apple-livephotoskit.com
-aaplimg.com
-cdn-apple.com
+(^|.*\. )apple\.com$
+(^|.*\. )icloud\.com$
+(^|.*\. )icloud-content\.com$
+(^|.*\. )mzstatic\.com$
+(^|.*\. )apple-cloudkit\.com$
+(^|.*\. )apple-livephotoskit\.com$
+(^|.*\. )aaplimg\.com$
+(^|.*\. )cdn-apple\.com$
+(^|.*\. )apple-dns\.net$
+
+# --- Microsoft & Office 365 ---
+(^|.*\. )microsoft\.com$
+(^|.*\. )microsoftonline\.com$
+(^|.*\. )office\.com$
+(^|.*\. )office365\.com$
+(^|.*\. )office\.net$
+(^|.*\. )live\.com$
+(^|.*\. )outlook\.com$
+(^|.*\. )msftncsi\.com$
+(^|.*\. )visualstudio\.com$
+(^|.*\. )windowsupdate\.com$
+(^|.*\. )windows\.com$
+(^|.*\. )sfx\.ms$
+
+# --- Streaming (Netflix, Twitch, Joyn, Spotify) ---
+(^|.*\. )netflix\.com$
+(^|.*\. )nflxext\.com$
+(^|.*\. )nflximg\.net$
+(^|.*\. )nflxvideo\.net$
+(^|.*\. )nflxso\.net$
+(^|.*\. )twitch\.tv$
+(^|.*\. )ttvnw\.net$
+(^|.*\. )jtvnw\.net$
+(^|.*\. )twitchsvc\.net$
+(^|.*\. )spotify\.com$
+(^|.*\. )scdn\.co$
+(^|.*\. )spotifycdn\.com$
+(^|.*\. )joyn\.de$
+(^|.*\. )joyn\.at$
+(^|.*\. )71i\.at$
+(^|.*\. )p7s1\.io$
+(^|.*\. )akamaized\.net$
+
+# --- Gaming (Steam, Epic, GOG, Nintendo) ---
+(^|.*\. )steampowered\.com$
+(^|.*\. )steamcommunity\.com$
+(^|.*\. )steamstatic\.com$
+(^|.*\. )steamcontent\.com$
+(^|.*\. )epicgames\.com$
+(^|.*\. )unrealengine\.com$
+(^|.*\. )gog\.com$
+(^|.*\. )nintendo\.com$
+(^|.*\. )nintendo\.net$
+(^|.*\. )nintendowifi\.net$
+(^|.*\. )easy\.ac$
+(^|.*\. )easyanticheat\.net$
+(^|.*\. )bhvr\.com$
+(^|.*\. )deadbydaylight\.com$
+
+# --- Entwicklung & News ---
+(^|.*\. )github\.com$
+(^|.*\. )githubusercontent\.com$
+(^|.*\. )bild\.de$
+(^|.*\. )bildstatic\.de$
+(^|.*\. )tinypass\.com$
+(^|.*\. )piano\.io$
