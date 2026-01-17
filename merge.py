@@ -9,6 +9,7 @@ from collections import Counter
 SOURCES_FILE = "sources.txt"
 OUTPUT_FILE = "blocklist.txt"
 VERSION_FILE = "version.txt"
+WHITELIST_FILE = "whitelist.txt"
 PROTECTED_KEYWORDS = ["oisd", "hagezi", "stevenblack", "firebog", "adaway", "badmojr"]
 DOMAIN_REGEX = r"^(?:0\.0\.0\.0|127\.0\.0\.1)?\s*([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+)"
 
@@ -26,9 +27,25 @@ def get_parent_domain(domain):
     parts = domain.split('.')
     return ".".join(parts[-2:]) if len(parts) > 2 else domain
 
+def is_whitelisted(domain, whitelist_set):
+    if not whitelist_set: return False
+    if domain in whitelist_set: return True
+    parts = domain.split('.')
+    for i in range(len(parts) - 1, 1, -1):
+        parent = ".".join(parts[len(parts)-i:])
+        if parent in whitelist_set: return True
+    return False
+
 def main():
     start_time = time.time()
-    print("--- OPTIMIZER START (Full Mode) ---")
+    print("--- OPTIMIZER START (Whitelist & Stats Mode) ---")
+
+    # 0. Whitelist laden
+    whitelist = set()
+    if os.path.exists(WHITELIST_FILE):
+        with open(WHITELIST_FILE, "r") as f:
+            whitelist = {line.strip().lower() for line in f if line.strip() and not line.startswith("#")}
+        print(f"-> {len(whitelist)} Domains von der Whitelist geladen.")
 
     if not os.path.exists(SOURCES_FILE):
         print(f"ERROR: {SOURCES_FILE} nicht gefunden.")
@@ -59,11 +76,9 @@ def main():
         is_master = "MASTER|" in line
         fail_match = re.search(r"FAILx(\d+)\|", line)
         current_fails = int(fail_match.group(1)) if fail_match else 0
-        
         url_to_fetch = re.sub(r"^(MASTER\||FAILx\d+\|)+", "", line)
         
-        # Kleine Pause um Server zu schonen
-        time.sleep(0.5)
+        time.sleep(0.2) # Kurze Pause
 
         try:
             r = requests.get(url_to_fetch, timeout=60, headers={'User-Agent': 'Mozilla/5.0'})
@@ -77,7 +92,9 @@ def main():
                 for d_line in r.text.splitlines():
                     d_match = re.search(DOMAIN_REGEX, d_line)
                     if d_match:
-                        current_list.add(d_match.group(1).lower())
+                        dom = d_match.group(1).lower()
+                        if not is_whitelisted(dom, whitelist):
+                            current_list.add(dom)
                 
                 total_raw_domains += len(current_list)
                 temp_new = [d for d in current_list if d not in all_domains and not is_subdomain(d, all_domains)]
@@ -91,7 +108,6 @@ def main():
                 else:
                     print(f"{'REDUND.':<8} | {0:>10} | {url_to_fetch}")
             else: raise Exception()
-
         except Exception:
             new_fails = current_fails + 1
             is_protected = any(k in url_to_fetch.lower() for k in PROTECTED_KEYWORDS)
@@ -114,12 +130,11 @@ def main():
             if not is_subdomain(d, final_set):
                 final_set.add(d)
 
-    # 3. Speichern der Blockliste
+    # 3. Speichern der Dateien
     with open(OUTPUT_FILE, "w") as f:
         f.write(f"# Optimized Blocklist\n# Total Domains: {len(final_set)}\n")
         for d in sorted(final_set): f.write(d + "\n")
 
-    # 4. Speichern der gesäuberten Quellen
     with open(SOURCES_FILE, "w") as f:
         f.write("# Cleaned Sources\n")
         for s in cleaned_sources: f.write(s + "\n")
@@ -140,7 +155,7 @@ def main():
     print(f"  - Bearbeitungszeit:               {duration:.2f} Sekunden")
     print("-" * 110)
 
-    # --- NEU: VERSION.TXT FÜR GITHUB ACTIONS EXPORTIEREN ---
+    # --- VERSION.TXT FÜR GITHUB ACTIONS EXPORTIEREN ---
     try:
         with open(VERSION_FILE, "w") as f:
             f.write(f"Last Update: {time.strftime('%Y-%m-%d %H:%M')}\n")

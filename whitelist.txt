@@ -1,71 +1,36 @@
-# --- Microsoft & Office 365 ---
-^.*\.microsoft\.com$
-^.*\.microsoftonline\.com$
-^.*\.office\.com$
-^.*\.office365\.com$
-^.*\.office\.net$
-^.*\.live\.com$
-^.*\.outlook\.com$
-^.*\.msftncsi\.com$
-^.*\.visualstudio\.com$
+# Microsoft & Office
+microsoft.com
+office.com
+office365.com
+outlook.com
+visualstudio.com
+github.com
+githubusercontent.com
 
-# --- Netflix ---
-^.*\.netflix\.com$
-^.*\.nflxext\.com$
-^.*\.nflximg\.net$
-^.*\.nflxvideo\.net$
-^.*\.nflxso\.net$
+# Streaming
+netflix.com
+nflxvideo.net
+spotify.com
+twitch.tv
+ttvnmain.net
 
-# --- Spotify ---
-^.*\.spotify\.com$
-^.*\.scdn\.co$
-^.*\.spotifycdn\.com$
+# Gaming & Anti-Cheat
+steampowered.com
+steamcommunity.com
+epicgames.com
+gog.com
+nintendo.com
+nintendo.net
+battleye.com
+easy_anticheat.net
 
-# --- Twitch ---
-^.*\.twitch\.tv$
-^.*\.twitchcdn\.net$
-^.*\.ttvnw\.net$
-^.*\.jtvnw\.net$
-^.*\.twitchsvc\.net$
+# Apple
+apple.com
+icloud.com
+mzstatic.com
 
-# --- Gaming (Steam, Epic, GOG, Nintendo) ---
-^.*\.steampowered\.com$
-^.*\.steamcommunity\.com$
-^.*\.steamgames\.com$
-^.*\.steamstatic\.com$
-^.*\.steamcontent\.com$
-^.*\.epicgames\.com$
-^.*\.unrealengine\.com$
-^.*\.gog\.com$
-^.*\.gog-statics\.com$
-^.*\.nintendo\.com$
-^.*\.nintendo\.net$
-^.*\.nintendowifi\.net$
-
-# --- Anti-Cheat & Behaviour ---
-^.*\.bhvr\.com$
-^.*\.deadbydaylight\.com$
-^.*\.easyanticheat\.net$
-^.*\.easy\.ac$
-
-# --- Online Zeitungen & Media ---
-^.*\.bild\.de$
-^.*\.bildstatic\.de$
-^.*\.asadcdn\.com$
-^.*\.joyn\.de$
-^.*\.joyn\.at$
-^.*\.joyn\.plus$
-^.*\.71i\.at$
-^.*\.akamaized\.net$
-
-# --- Apple ---
-^.*\.apple\.com$
-^.*\.icloud\.com$
-^.*\.mzstatic\.com$
-^.*\.aaplimg\.com$
-^.*\.cdn-apple\.com$
-
-# --- GitHub ---
-^.*\.github\.com$
-^.*\.githubusercontent\.com$
-^.*\.githubassets\.com$
+# Media & News (Beispiele)
+joyn.at
+joyn.de
+bild.de
+orf.at
