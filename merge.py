@@ -40,8 +40,9 @@ def main():
     start_time = time.time()
     print("--- OPTIMIZER START (Whitelist & Stats Mode) ---")
 
-    # 0. Whitelist laden
+# 0. Whitelist laden
     whitelist = set()
+    whitelist_hit_count = 0  # NEU: Zähler für Whitelist-Treffer
     if os.path.exists(WHITELIST_FILE):
         with open(WHITELIST_FILE, "r") as f:
             whitelist = {line.strip().lower() for line in f if line.strip() and not line.startswith("#")}
@@ -93,7 +94,10 @@ def main():
                     d_match = re.search(DOMAIN_REGEX, d_line)
                     if d_match:
                         dom = d_match.group(1).lower()
-                        if not is_whitelisted(dom, whitelist):
+                        # FILTER: Prüfen ob auf Whitelist
+                        if is_whitelisted(dom, whitelist):
+                            whitelist_hit_count += 1 # NEU: Treffer zählen
+                        else:
                             current_list.add(dom)
                 
                 total_raw_domains += len(current_list)
@@ -139,18 +143,20 @@ def main():
         f.write("# Cleaned Sources\n")
         for s in cleaned_sources: f.write(s + "\n")
 
-    # --- DETAILLIERTE STATISTIK ---
+# --- DETAILLIERTE STATISTIK AM ENDE ---
     final_count = len(final_set)
-    removed_count = total_raw_domains - final_count
-    reduction_pct = (removed_count / total_raw_domains * 100) if total_raw_domains > 0 else 0
+    # Ersparnis durch Duplikate/Aggregation berechnen
+    savings_by_logic = total_raw_domains - final_count 
+    reduction_pct = (savings_by_logic / total_raw_domains * 100) if total_raw_domains > 0 else 0
     duration = time.time() - start_time
 
     print("-" * 110)
     print(f"ZUSAMMENFASSUNG:")
-    print(f"  - Brutto-Domains (Rohdaten):      {total_raw_domains:,}".replace(",", "."))
+    print(f"  - Brutto-Domains (Rohdaten):      {total_raw_domains + whitelist_hit_count:,}".replace(",", "."))
+    print(f"  - WHITELIST-TREFFER (gelöscht):   {whitelist_hit_count:,}".replace(",", "."))
     print(f"  - Netto-Domains (blocklist.txt):  {final_count:,}".replace(",", "."))
     print(f"  - Davon Auto-Wildcards (TLDs):    {len(auto_wildcards):,}".replace(",", "."))
-    print(f"  - Ersparnis (Müll & Aggregation): {removed_count:,}".replace(",", "."))
+    print(f"  - Ersparnis durch Aggregation:    {savings_by_logic:,}".replace(",", "."))
     print(f"  - Effizienz-Steigerung:           {reduction_pct:.2f}%")
     print(f"  - Bearbeitungszeit:               {duration:.2f} Sekunden")
     print("-" * 110)
@@ -160,6 +166,7 @@ def main():
         with open(VERSION_FILE, "w") as f:
             f.write(f"Last Update: {time.strftime('%Y-%m-%d %H:%M')}\n")
             f.write(f"Total Domains: {final_count}\n")
+            f.write(f"Whitelist cleaned: {whitelist_hit_count}\n")
         print(f"Statistik in {VERSION_FILE} gespeichert.")
     except Exception as e:
         print(f"Fehler beim Schreiben der version.txt: {e}")
