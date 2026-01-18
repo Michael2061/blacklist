@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"crypto/md5"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,7 +18,6 @@ const (
 	versionFile    = "version.txt"
 	whitelistFile  = "whitelist.txt"
 	subThresh      = 10
-	maxFails       = 3
 	domainRegex    = `(?m)^(?:0\.0\.0\.0|127\.0\.0\.1)?\s*([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+)`
 )
 
@@ -49,7 +47,6 @@ func main() {
 	startTime := time.Now()
 	fmt.Println("--- GO OPTIMIZER START ---")
 
-	// 0. Whitelist laden
 	whitelist := make(map[string]bool)
 	whitelistHitCount := 0
 	if f, err := os.Open(whitelistFile); err == nil {
@@ -64,8 +61,11 @@ func main() {
 	}
 	fmt.Printf("-> %d Domains von Whitelist geladen.\n", len(whitelist))
 
-	// 1. Quellen einlesen
-	f, _ := os.Open(sourcesFile)
+	f, err := os.Open(sourcesFile)
+	if err != nil {
+		fmt.Printf("Fehler: %s konnte nicht geöffnet werden\n", sourcesFile)
+		return
+	}
 	scanner := bufio.NewScanner(f)
 	var uniqueSources []string
 	for scanner.Scan() {
@@ -114,7 +114,6 @@ func main() {
 		fmt.Printf("%-8s | %-10d | %s\n", "OK", newCount, cleanURL)
 	}
 
-	// 2. Aggregation (Subdomains)
 	fmt.Println("\nOptimiere Subdomains...")
 	parentCounts := make(map[string]int)
 	for dom := range allDomains {
@@ -139,7 +138,6 @@ func main() {
 	}
 	sort.Strings(finalList)
 
-	// 3. Speichern & Statistik
 	out, _ := os.Create(outputFile)
 	out.WriteString(fmt.Sprintf("# Optimized by Go\n# Total: %d\n", len(finalList)))
 	for _, d := range finalList {
@@ -149,6 +147,7 @@ func main() {
 
 	duration := time.Since(startTime)
 	finalCount := len(finalList)
+	// Jetzt wird savings auch benutzt:
 	savings := totalRaw - finalCount - whitelistHitCount
 
 	fmt.Println(strings.Repeat("-", 100))
@@ -156,10 +155,10 @@ func main() {
 	fmt.Printf("  - Brutto-Domains:       %d\n", totalRaw)
 	fmt.Printf("  - Whitelist-Treffer:    %d\n", whitelistHitCount)
 	fmt.Printf("  - Netto-Blocklist:      %d\n", finalCount)
+	fmt.Printf("  - Ersparnis (Aggreg.):  %d\n", savings)
 	fmt.Printf("  - Zeit gesamt:          %v\n", duration)
 	fmt.Println(strings.Repeat("-", 100))
 
-	// Version.txt schreiben
 	vFile, _ := os.Create(versionFile)
 	vFile.WriteString(fmt.Sprintf("Last Update: %s\nTotal: %d\nWhitelist: %d\nEngine: Go", 
 		time.Now().Format("2006-01-02 15:04"), finalCount, whitelistHitCount))
