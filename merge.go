@@ -159,8 +159,18 @@ func main() {
 	fmt.Printf("  - Zeit gesamt:          %v\n", duration)
 	fmt.Println(strings.Repeat("-", 100))
 
+	// --- STATISTIK EXPORTIEREN (Hier einfügen!) ---
+	timestamp := time.Now().Format("2006-01-02 15:04")
+	
+	// Klassische Text-Datei
 	vFile, _ := os.Create(versionFile)
 	vFile.WriteString(fmt.Sprintf("Last Update: %s\nTotal: %d\nWhitelist: %d\nEngine: Go", 
-		time.Now().Format("2006-01-02 15:04"), finalCount, whitelistHitCount))
+		timestamp, finalCount, whitelistHitCount))
 	vFile.Close()
+
+	// NEU: JSON-Datei für die README Badges
+	jsonFile, _ := os.Create("version.json")
+	jsonFile.WriteString(fmt.Sprintf(`{"LastUpdate": "%s", "Total": %d, "Whitelist": %d}`, 
+		timestamp, finalCount, whitelistHitCount))
+	jsonFile.Close()
 }

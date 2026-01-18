@@ -35,7 +35,7 @@ jobs:
           # Wir holen die neue Zahl aus der frisch generierten version.txt
           NEW_COUNT=$(grep "Total:" version.txt | grep -oP '\d+' || echo "0")
           
-          git add blocklist.txt version.txt sources.txt
+          git add blocklist.txt version.txt version.json sources.txt
           
           # Commit mit der schicken Statistik
           git commit -m "Update: $OLD_COUNT -> $NEW_COUNT Domains (Go Engine)" || exit 0
