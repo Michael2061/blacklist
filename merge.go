@@ -59,8 +59,10 @@ func main() {
 			line := strings.TrimSpace(scanner.Text())
 			if line != "" && !strings.HasPrefix(line, "#") {
 				dom := strings.ToLower(line)
-				whitelist[dom] = true
-				whitelistOrder = append(whitelistOrder, dom)
+				if !whitelist[dom] {
+					whitelist[dom] = true
+					whitelistOrder = append(whitelistOrder, dom)
+				}
 			}
 		}
 		f.Close()
@@ -83,23 +85,19 @@ func main() {
 	re := regexp.MustCompile(domainRegex)
 	totalRaw := 0
 
-	// Kopfzeile für die Tabelle
 	fmt.Printf("%-8s | %-10s | %s\n", "STATUS", "NEUE", "QUELLE")
 	fmt.Println(strings.Repeat("-", 80))
 
 	client := &http.Client{Timeout: 45 * time.Second}
 	for _, source := range uniqueSources {
 		cleanURL := regexp.MustCompile(`^(MASTER\||FAILx\d+\|)+`).ReplaceAllString(source, "")
-		
 		resp, err := client.Get(cleanURL)
 		if err != nil || resp.StatusCode != 200 {
 			fmt.Printf("%-8s | %-10s | %s\n", "OFFLINE", "Error", cleanURL)
 			continue
 		}
-
 		body, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
-
 		matches := re.FindAllStringSubmatch(string(body), -1)
 		newCount := 0
 		for _, m := range matches {
@@ -140,6 +138,8 @@ func main() {
 	sort.Strings(finalList)
 
 	// --- DATEIEN SCHREIBEN ---
+	
+	// Blocklist
 	out, _ := os.Create(outputFile)
 	out.WriteString(fmt.Sprintf("# Optimized Blocklist\n# Total: %d\n", len(finalList)))
 	for _, d := range finalList {
@@ -147,13 +147,15 @@ func main() {
 	}
 	out.Close()
 
+	// Allowlist (Sauber für Technitium !-URL)
 	allowOut, _ := os.Create(allowListFile)
 	allowOut.WriteString("# Technitium Allow List\n")
 	for _, dom := range whitelistOrder {
-		allowOut.WriteString("!" + dom + "\n")
+		allowOut.WriteString(dom + "\n")
 	}
 	allowOut.Close()
 
+	// Versionierung
 	timestamp := time.Now().Format("2006-01-02 15:04")
 	finalCount := len(finalList)
 	duration := time.Since(startTime)
