@@ -11,7 +11,7 @@ windowsupdate.com
 sfx.ms
 aspnetcdn.com
 
-# --- GAMING (Steam, Epic, Nintendo, Sony) ---
+# --- GAMING ---
 steampowered.com
 steamcommunity.com
 steamstatic.com
@@ -26,7 +26,7 @@ xboxlive.com
 ea.com
 origin.com
 
-# --- STREAMING ---
+# --- STREAMING & MEDIA ---
 netflix.com
 nflxvideo.net
 nflxso.net
@@ -36,9 +36,27 @@ scdn.co
 twitch.tv
 ttvnmain.net
 disneyplus.com
+disney-plus.net
+disneymedia.com
 dssott.com
+bamgrid.com
 amazon.de
+amazon.com
 amazon-adsystem.com
+aiv-delivery.net
+shatter-delivery.net
+joyn.at
+joyn.de
+orf.at
+bild.de
+dazn.com
+dazndn.com
+dazn-api.com
+indazn.com
+ard.de
+ardmediathek.de
+zdf.de
+zdf.tv
 
 # --- APPLE ---
 apple.com
@@ -47,19 +65,31 @@ mzstatic.com
 aaplimg.com
 cdn-apple.com
 me.com
+apple-pay.com
 
-# --- TOOLS & MEDIA ---
-github.com
-githubusercontent.com
-joyn.at
-joyn.de
-orf.at
-bild.de
+# --- GOOGLE & TOOLS ---
 google.com
 gstatic.com
 googleusercontent.com
+googleapis.com
+github.com
+githubusercontent.com
+recaptcha.net
+google-analytics.com
+intercom.io
 
-# --- ANTI-CHEAT & TECHNIK ---
+# --- SKY & WOW ---
+sky.de
+sky.com
+sky.at
+wowtv.de
+skyticket.de
+skyjams.com
+
+# --- TECHNIK & INFRASTRUKTUR ---
+edgesuite.net
+akamaihd.net
+amazonaws.com
 battleye.com
 easy_anticheat.net
 vanguard.com
@@ -71,57 +101,6 @@ stripe.com
 klarna.com
 mastercard.com
 visa.com
-apple-pay.com
-
-# --- GOOGLE ESSENTIALS ---
-google.com
-gstatic.com
-googleapis.com
-googleusercontent.com
-recaptcha.net
-google-analytics.com  # Falls du Analyse-Tools auf eigenen Seiten nutzt
-
-# --- SMART HOME ---
-amazon.com
-amazonaws.com        # Wichtig: Viele Apps speichern hier ihre Daten!
-aiv-delivery.net     # Prime Video
-shatter-delivery.net # Prime Video
-
-# --- OTHERS ---
+okta.com
 adobe.com
-okta.com             # Wichtig für Firmen-Logins
 zoom.us
-teams.microsoft.com
-
-
-# --- SKY & WOW STREAMING ---
-sky.de
-sky.com
-sky.at
-wowtv.de
-skyticket.de
-skyjams.com
-skyid.sky.com
-edgesuite.net
-entitlement.sky.com
-
-# --- DISNEY+ ---
-disneyplus.com
-disney-plus.net
-dssott.com
-disneymedia.com
-bamgrid.com
-
-# --- DAZN ---
-dazn.com
-dazndn.com
-dazn-api.com
-indazn.com
-intercom.io
-
-# --- MEDIATHEKEN (ARD & ZDF) ---
-ard.de
-ardmediathek.de
-zdf.de
-zdf.tv
-akamaihd.net  # Wichtig: Viele Mediatheken nutzen Akamai CDNs
