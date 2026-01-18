@@ -1,6 +1,8 @@
-# 🛡️ Meine DNS Blockliste
+# 🛡️ DNS Optimizer Dashboard
 
-Diese Liste wird täglich automatisch aktualisiert und optimiert.
+Dieses Projekt optimiert Blocklisten für Technitium DNS und sorgt für ein störungsfreies Internet-Erlebnis durch intelligentes Whitelisting.
+
+**System-Status:** ![Update Workflow](https://github.com/Michael2061/blacklist/actions/workflows/update.yml/badge.svg)
 
 | Statistik | Wert |
 | :--- | :--- |
@@ -9,4 +11,3 @@ Diese Liste wird täglich automatisch aktualisiert und optimiert.
 | **Whitelist-Hits** | ![Whitelist](https://img.shields.io/badge/dynamic/json?label=%20&query=$.Whitelist&color=green&url=https://raw.githubusercontent.com/Michael2061/blacklist/main/version.json) |
 
 ---
-*Powered by Go-Engine 🚀*
