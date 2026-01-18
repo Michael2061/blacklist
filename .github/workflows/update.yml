@@ -3,7 +3,7 @@ name: Daily Blocklist Update
 on:
   schedule:
     - cron: '0 3 * * *' 
-  workflow_dispatch: # Damit du ihn jetzt sofort testen kannst
+  workflow_dispatch: 
 
 permissions:
   contents: write
@@ -15,32 +15,28 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Go
+        uses: actions/setup-go@v4
         with:
-          python-version: '3.x'
+          go-version: '1.21'
 
-      - name: Install dependencies
-        run: pip install requests
-
-      - name: Run Optimizer Script
-        run: python merge.py
+      - name: Run Go Optimizer
+        run: go run merge.go
 
       - name: Commit and Push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           
-          # 1. Den alten Stand aus der vorhandenen version.txt extrahieren (bevor sie überschrieben wird)
-          # Wir suchen nach der Zahl hinter "Total Domains:"
-          OLD_COUNT=$(grep "Total Domains:" version.txt | grep -oP '\d+' || echo "0")
+          # Wir holen die alte Zahl (vor dem Add)
+          # Falls die Datei nicht existiert oder das Format anders ist, nutzen wir 0
+          OLD_COUNT=$(git show HEAD:version.txt | grep "Total:" | grep -oP '\d+' || echo "0")
           
-          # 2. Das Python-Skript hat die NEUE version.txt bereits erstellt.
-          # Wir holen uns die neue Zahl für die Commit-Nachricht
-          NEW_COUNT=$(grep "Total Domains:" version.txt | grep -oP '\d+' || echo "0")
+          # Wir holen die neue Zahl aus der frisch generierten version.txt
+          NEW_COUNT=$(grep "Total:" version.txt | grep -oP '\d+' || echo "0")
           
           git add blocklist.txt version.txt sources.txt
           
-          # 3. Der Commit zeigt dir jetzt sofort die Differenz!
-          git commit -m "Update: $OLD_COUNT -> $NEW_COUNT Domains" || exit 0
+          # Commit mit der schicken Statistik
+          git commit -m "Update: $OLD_COUNT -> $NEW_COUNT Domains (Go Engine)" || exit 0
           git push
