@@ -32,24 +32,52 @@ scdn.co
 twitch.tv
 ttvnmain.net
 disneyplus.com
+disney-plus.net
+disneymedia.com
 dssott.com
+bamgrid.com
 amazon.de
+amazon.com
 amazon-adsystem.com
+aiv-delivery.net
+shatter-delivery.net
+joyn.at
+joyn.de
+orf.at
+bild.de
+dazn.com
+dazndn.com
+dazn-api.com
+indazn.com
+ard.de
+ardmediathek.de
+zdf.de
+zdf.tv
 apple.com
 icloud.com
 mzstatic.com
 aaplimg.com
 cdn-apple.com
 me.com
-github.com
-githubusercontent.com
-joyn.at
-joyn.de
-orf.at
-bild.de
+apple-pay.com
 google.com
 gstatic.com
 googleusercontent.com
+googleapis.com
+github.com
+githubusercontent.com
+recaptcha.net
+google-analytics.com
+intercom.io
+sky.de
+sky.com
+sky.at
+wowtv.de
+skyticket.de
+skyjams.com
+edgesuite.net
+akamaihd.net
+amazonaws.com
 battleye.com
 easy_anticheat.net
 vanguard.com
@@ -59,15 +87,6 @@ stripe.com
 klarna.com
 mastercard.com
 visa.com
-apple-pay.com
-googleapis.com
-recaptcha.net
-google-analytics.com  # falls du analyse-tools auf eigenen seiten nutzt
-amazon.com
-amazonaws.com        # wichtig: viele apps speichern hier ihre daten!
-aiv-delivery.net     # prime video
-shatter-delivery.net # prime video
+okta.com
 adobe.com
-okta.com             # wichtig für firmen-logins
 zoom.us
-teams.microsoft.com
