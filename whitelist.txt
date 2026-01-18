@@ -92,3 +92,15 @@ adobe.com
 okta.com             # Wichtig für Firmen-Logins
 zoom.us
 teams.microsoft.com
+
+
+# --- SKY & WOW STREAMING ---
+sky.de
+sky.com
+sky.at
+wowtv.de
+skyticket.de
+skyjams.com
+skyid.sky.com
+edgesuite.net
+entitlement.sky.com
