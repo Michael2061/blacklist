@@ -104,3 +104,24 @@ skyjams.com
 skyid.sky.com
 edgesuite.net
 entitlement.sky.com
+
+# --- DISNEY+ ---
+disneyplus.com
+disney-plus.net
+dssott.com
+disneymedia.com
+bamgrid.com
+
+# --- DAZN ---
+dazn.com
+dazndn.com
+dazn-api.com
+indazn.com
+intercom.io
+
+# --- MEDIATHEKEN (ARD & ZDF) ---
+ard.de
+ardmediathek.de
+zdf.de
+zdf.tv
+akamaihd.net  # Wichtig: Viele Mediatheken nutzen Akamai CDNs
