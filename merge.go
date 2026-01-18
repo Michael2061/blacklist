@@ -17,6 +17,7 @@ const (
 	outputFile     = "blocklist.txt"
 	versionFile    = "version.txt"
 	whitelistFile  = "whitelist.txt"
+	allowListFile  = "allowlist.txt" // Neue Datei für Technitium
 	subThresh      = 10
 	domainRegex    = `(?m)^(?:0\.0\.0\.0|127\.0\.0\.1)?\s*([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+)`
 )
@@ -47,25 +48,27 @@ func main() {
 	startTime := time.Now()
 	fmt.Println("--- GO OPTIMIZER START ---")
 
+	// 0. Whitelist laden
 	whitelist := make(map[string]bool)
+	var whitelistOrder []string // Um die Kommentare/Reihenfolge für die allowlist zu behalten
 	whitelistHitCount := 0
+
 	if f, err := os.Open(whitelistFile); err == nil {
 		scanner := bufio.NewScanner(f)
 		for scanner.Scan() {
-			line := strings.ToLower(strings.TrimSpace(scanner.Text()))
+			line := strings.TrimSpace(scanner.Text())
 			if line != "" && !strings.HasPrefix(line, "#") {
-				whitelist[line] = true
+				dom := strings.ToLower(line)
+				whitelist[dom] = true
+				whitelistOrder = append(whitelistOrder, dom)
 			}
 		}
 		f.Close()
 	}
 	fmt.Printf("-> %d Domains von Whitelist geladen.\n", len(whitelist))
 
-	f, err := os.Open(sourcesFile)
-	if err != nil {
-		fmt.Printf("Fehler: %s konnte nicht geöffnet werden\n", sourcesFile)
-		return
-	}
+	// 1. Quellen einlesen & Blockliste erstellen
+	f, _ := os.Open(sourcesFile)
 	scanner := bufio.NewScanner(f)
 	var uniqueSources []string
 	for scanner.Scan() {
@@ -80,53 +83,38 @@ func main() {
 	re := regexp.MustCompile(domainRegex)
 	totalRaw := 0
 
-	fmt.Printf("\n%-8s | %-10s | %s\n", "STATUS", "NEUE", "QUELLE")
-	fmt.Println(strings.Repeat("-", 100))
-
 	client := &http.Client{Timeout: 45 * time.Second}
-
 	for _, source := range uniqueSources {
 		cleanURL := regexp.MustCompile(`^(MASTER\||FAILx\d+\|)+`).ReplaceAllString(source, "")
-		
 		resp, err := client.Get(cleanURL)
 		if err != nil || resp.StatusCode != 200 {
-			fmt.Printf("%-8s | %-10s | %s\n", "OFFLINE", "Error", cleanURL)
 			continue
 		}
-
 		body, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
-
 		matches := re.FindAllStringSubmatch(string(body), -1)
-		newCount := 0
 		for _, m := range matches {
 			dom := strings.ToLower(m[1])
 			if isWhitelisted(dom, whitelist) {
 				whitelistHitCount++
 				continue
 			}
-			if !allDomains[dom] {
-				allDomains[dom] = true
-				newCount++
-			}
+			allDomains[dom] = true
 		}
 		totalRaw += len(matches)
-		fmt.Printf("%-8s | %-10d | %s\n", "OK", newCount, cleanURL)
 	}
 
-	fmt.Println("\nOptimiere Subdomains...")
+	// 2. Aggregation
 	parentCounts := make(map[string]int)
 	for dom := range allDomains {
 		parentCounts[getParent(dom)]++
 	}
-
 	autoWildcards := make(map[string]bool)
 	for p, count := range parentCounts {
 		if count >= subThresh {
 			autoWildcards[p] = true
 		}
 	}
-
 	finalList := []string{}
 	for dom := range allDomains {
 		if !autoWildcards[getParent(dom)] {
@@ -138,39 +126,35 @@ func main() {
 	}
 	sort.Strings(finalList)
 
+	// --- EXPORT 1: Blocklist ---
 	out, _ := os.Create(outputFile)
-	out.WriteString(fmt.Sprintf("# Optimized by Go\n# Total: %d\n", len(finalList)))
+	out.WriteString(fmt.Sprintf("# Optimized Blocklist\n# Total: %d\n", len(finalList)))
 	for _, d := range finalList {
 		out.WriteString(d + "\n")
 	}
 	out.Close()
 
-	duration := time.Since(startTime)
-	finalCount := len(finalList)
-	// Jetzt wird savings auch benutzt:
-	savings := totalRaw - finalCount - whitelistHitCount
+	// --- EXPORT 2: Allowlist (Technitium Format) ---
+	allowOut, _ := os.Create(allowListFile)
+	allowOut.WriteString("# Technitium Allow List - Generated from whitelist.txt\n")
+	for _, dom := range whitelistOrder {
+		allowOut.WriteString("!" + dom + "\n")
+	}
+	allowOut.Close()
 
-	fmt.Println(strings.Repeat("-", 100))
-	fmt.Printf("ZUSAMMENFASSUNG (Go-Engine):\n")
-	fmt.Printf("  - Brutto-Domains:       %d\n", totalRaw)
-	fmt.Printf("  - Whitelist-Treffer:    %d\n", whitelistHitCount)
-	fmt.Printf("  - Netto-Blocklist:      %d\n", finalCount)
-	fmt.Printf("  - Ersparnis (Aggreg.):  %d\n", savings)
-	fmt.Printf("  - Zeit gesamt:          %v\n", duration)
-	fmt.Println(strings.Repeat("-", 100))
-
-	// --- STATISTIK EXPORTIEREN (Hier einfügen!) ---
+	// --- EXPORT 3: Statistiken ---
 	timestamp := time.Now().Format("2006-01-02 15:04")
-	
-	// Klassische Text-Datei
+	finalCount := len(finalList)
+
+	// version.txt
 	vFile, _ := os.Create(versionFile)
-	vFile.WriteString(fmt.Sprintf("Last Update: %s\nTotal: %d\nWhitelist: %d\nEngine: Go", 
-		timestamp, finalCount, whitelistHitCount))
+	vFile.WriteString(fmt.Sprintf("Last Update: %s\nTotal: %d\nWhitelist: %d\nEngine: Go", timestamp, finalCount, whitelistHitCount))
 	vFile.Close()
 
-	// NEU: JSON-Datei für die README Badges
+	// version.json
 	jsonFile, _ := os.Create("version.json")
-	jsonFile.WriteString(fmt.Sprintf(`{"LastUpdate": "%s", "Total": %d, "Whitelist": %d}`, 
-		timestamp, finalCount, whitelistHitCount))
+	jsonFile.WriteString(fmt.Sprintf(`{"LastUpdate": "%s", "Total": %d, "Whitelist": %d}`, timestamp, finalCount, whitelistHitCount))
 	jsonFile.Close()
+
+	fmt.Printf("Fertig! Blockliste: %d, Allowliste: %d\n", finalCount, len(whitelistOrder))
 }
