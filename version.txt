@@ -1,3 +1,4 @@
-Last Update: 2026-01-18 04:54
-Total Domains: 238452
-Whitelist cleaned: 1143
+Last Update: 2026-01-18 12:13
+Total: 258642
+Whitelist: 1147
+Engine: Go
