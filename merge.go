@@ -45,9 +45,10 @@ func getParent(domain string) string {
 }
 
 func main() {
-	startTime := time.Now() // Wird jetzt unten verwendet!
+	startTime := time.Now()
 	fmt.Println("--- GO OPTIMIZER START ---")
 
+	// 0. Whitelist laden
 	whitelist := make(map[string]bool)
 	var whitelistOrder []string
 	whitelistHitCount := 0
@@ -64,8 +65,9 @@ func main() {
 		}
 		f.Close()
 	}
-	fmt.Printf("-> %d Domains von Whitelist geladen.\n", len(whitelist))
+	fmt.Printf("-> %d Domains von Whitelist geladen.\n\n", len(whitelist))
 
+	// 1. Quellen einlesen
 	f, _ := os.Open(sourcesFile)
 	scanner := bufio.NewScanner(f)
 	var uniqueSources []string
@@ -81,27 +83,41 @@ func main() {
 	re := regexp.MustCompile(domainRegex)
 	totalRaw := 0
 
+	// Kopfzeile für die Tabelle
+	fmt.Printf("%-8s | %-10s | %s\n", "STATUS", "NEUE", "QUELLE")
+	fmt.Println(strings.Repeat("-", 80))
+
 	client := &http.Client{Timeout: 45 * time.Second}
 	for _, source := range uniqueSources {
 		cleanURL := regexp.MustCompile(`^(MASTER\||FAILx\d+\|)+`).ReplaceAllString(source, "")
+		
 		resp, err := client.Get(cleanURL)
 		if err != nil || resp.StatusCode != 200 {
+			fmt.Printf("%-8s | %-10s | %s\n", "OFFLINE", "Error", cleanURL)
 			continue
 		}
+
 		body, _ := io.ReadAll(resp.Body)
 		resp.Body.Close()
+
 		matches := re.FindAllStringSubmatch(string(body), -1)
+		newCount := 0
 		for _, m := range matches {
 			dom := strings.ToLower(m[1])
 			if isWhitelisted(dom, whitelist) {
 				whitelistHitCount++
 				continue
 			}
-			allDomains[dom] = true
+			if !allDomains[dom] {
+				allDomains[dom] = true
+				newCount++
+			}
 		}
 		totalRaw += len(matches)
+		fmt.Printf("%-8s | %-10d | %s\n", "OK", newCount, cleanURL)
 	}
 
+	// 2. Aggregation
 	parentCounts := make(map[string]int)
 	for dom := range allDomains {
 		parentCounts[getParent(dom)]++
@@ -123,6 +139,7 @@ func main() {
 	}
 	sort.Strings(finalList)
 
+	// --- DATEIEN SCHREIBEN ---
 	out, _ := os.Create(outputFile)
 	out.WriteString(fmt.Sprintf("# Optimized Blocklist\n# Total: %d\n", len(finalList)))
 	for _, d := range finalList {
@@ -139,7 +156,7 @@ func main() {
 
 	timestamp := time.Now().Format("2006-01-02 15:04")
 	finalCount := len(finalList)
-	duration := time.Since(startTime) // Hier wird startTime benutzt
+	duration := time.Since(startTime)
 
 	vFile, _ := os.Create(versionFile)
 	vFile.WriteString(fmt.Sprintf("Last Update: %s\nTotal: %d\nWhitelist: %d\nEngine: Go", timestamp, finalCount, whitelistHitCount))
@@ -149,7 +166,9 @@ func main() {
 	jsonFile.WriteString(fmt.Sprintf(`{"LastUpdate": "%s", "Total": %d, "Whitelist": %d}`, timestamp, finalCount, whitelistHitCount))
 	jsonFile.Close()
 
-	fmt.Println(strings.Repeat("-", 40))
-	fmt.Printf("Fertig in: %v\nBlockliste: %d\nAllowliste: %d\n", duration, finalCount, len(whitelistOrder))
-	fmt.Println(strings.Repeat("-", 40))
+	fmt.Println(strings.Repeat("-", 80))
+	fmt.Printf("ZUSAMMENFASSUNG:\n")
+	fmt.Printf("Zeit: %v | Blockliste: %d | Allowliste: %d | Whitelist-Treffer: %d\n", 
+		duration, finalCount, len(whitelistOrder), whitelistHitCount)
+	fmt.Println(strings.Repeat("-", 80))
 }
