@@ -3,24 +3,35 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"io"
-	"net/http"
 	"os"
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/go-resty/resty/v2"
 )
 
 const (
-	sourcesFile    = "sources.txt"
-	outputFile     = "blocklist.txt"
-	versionFile    = "version.txt"
-	whitelistFile  = "whitelist.txt"
-	allowListFile  = "allowlist.txt"
-	subThresh      = 10
-	domainRegex    = `(?m)^(?:0\.0\.0\.0|127\.0\.0\.1)?\s*([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+)`
+	sourcesFile   = "sources.txt"
+	outputFile    = "blocklist.txt"
+	versionFile   = "version.txt"
+	whitelistFile = "whitelist.txt"
+	allowListFile = "allowlist.txt"
+	subThresh     = 10
+	domainRegex   = `(?m)^(?:0\.0\.0\.0|127\.0\.0\.1)?\s*([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+)`
 )
+
+func isValidDomain(domain string) bool {
+	if !strings.Contains(domain, ".") {
+		return false
+	}
+	if strings.HasSuffix(domain, ".local") || strings.HasSuffix(domain, ".lan") || strings.HasSuffix(domain, ".home.arpa") {
+		return false
+	}
+	return true
+}
 
 func isWhitelisted(domain string, whitelist map[string]bool) bool {
 	if whitelist[domain] {
@@ -46,12 +57,13 @@ func getParent(domain string) string {
 
 func main() {
 	startTime := time.Now()
-	fmt.Println("--- GO OPTIMIZER START ---")
+	fmt.Println("--- GO OPTIMIZER START (Parallel + Resty + TLD-Check) ---")
 
 	// 0. Whitelist laden
 	whitelist := make(map[string]bool)
 	var whitelistOrder []string
-	whitelistHitCount := 0
+	var whitelistHitCount int
+	var hitMu sync.Mutex
 
 	if f, err := os.Open(whitelistFile); err == nil {
 		scanner := bufio.NewScanner(f)
@@ -67,12 +79,15 @@ func main() {
 		}
 		f.Close()
 	}
-	fmt.Printf("-> %d Domains von Whitelist geladen.\n\n", len(whitelist))
 
 	// 1. Quellen einlesen
-	f, _ := os.Open(sourcesFile)
-	scanner := bufio.NewScanner(f)
+	f, err := os.Open(sourcesFile)
+	if err != nil {
+		fmt.Printf("Fehler: %s fehlt.\n", sourcesFile)
+		return
+	}
 	var uniqueSources []string
+	scanner := bufio.NewScanner(f)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
 		if line != "" && !strings.HasPrefix(line, "#") {
@@ -82,38 +97,52 @@ func main() {
 	f.Close()
 
 	allDomains := make(map[string]bool)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
 	re := regexp.MustCompile(domainRegex)
-	totalRaw := 0
+
+	// Resty Client mit 3 Retries und Timeout
+	client := resty.New().SetTimeout(45 * time.Second).SetRetryCount(3)
 
 	fmt.Printf("%-8s | %-10s | %s\n", "STATUS", "NEUE", "QUELLE")
 	fmt.Println(strings.Repeat("-", 80))
 
-	client := &http.Client{Timeout: 45 * time.Second}
 	for _, source := range uniqueSources {
-		cleanURL := regexp.MustCompile(`^(MASTER\||FAILx\d+\|)+`).ReplaceAllString(source, "")
-		resp, err := client.Get(cleanURL)
-		if err != nil || resp.StatusCode != 200 {
-			fmt.Printf("%-8s | %-10s | %s\n", "OFFLINE", "Error", cleanURL)
-			continue
-		}
-		body, _ := io.ReadAll(resp.Body)
-		resp.Body.Close()
-		matches := re.FindAllStringSubmatch(string(body), -1)
-		newCount := 0
-		for _, m := range matches {
-			dom := strings.ToLower(m[1])
-			if isWhitelisted(dom, whitelist) {
-				whitelistHitCount++
-				continue
+		wg.Add(1)
+		go func(url string) {
+			defer wg.Done()
+			cleanURL := regexp.MustCompile(`^(MASTER\||FAILx\d+\|)+`).ReplaceAllString(url, "")
+
+			resp, err := client.R().Get(cleanURL)
+			if err != nil || resp.IsError() {
+				fmt.Printf("%-8s | %-10s | %s\n", "OFFLINE", "Error", cleanURL)
+				return
 			}
-			if !allDomains[dom] {
-				allDomains[dom] = true
-				newCount++
+
+			matches := re.FindAllStringSubmatch(resp.String(), -1)
+			localNewCount := 0
+
+			for _, m := range matches {
+				dom := strings.ToLower(m[1])
+				if !isValidDomain(dom) || isWhitelisted(dom, whitelist) {
+					if isWhitelisted(dom, whitelist) {
+						hitMu.Lock()
+						whitelistHitCount++
+						hitMu.Unlock()
+					}
+					continue
+				}
+				mu.Lock()
+				if !allDomains[dom] {
+					allDomains[dom] = true
+					localNewCount++
+				}
+				mu.Unlock()
 			}
-		}
-		totalRaw += len(matches)
-		fmt.Printf("%-8s | %-10d | %s\n", "OK", newCount, cleanURL)
+			fmt.Printf("%-8s | %-10d | %s\n", "OK", localNewCount, cleanURL)
+		}(source)
 	}
+	wg.Wait()
 
 	// 2. Aggregation
 	parentCounts := make(map[string]int)
@@ -138,8 +167,6 @@ func main() {
 	sort.Strings(finalList)
 
 	// --- DATEIEN SCHREIBEN ---
-	
-	// Blocklist
 	out, _ := os.Create(outputFile)
 	out.WriteString(fmt.Sprintf("# Optimized Blocklist\n# Total: %d\n", len(finalList)))
 	for _, d := range finalList {
@@ -147,7 +174,6 @@ func main() {
 	}
 	out.Close()
 
-	// Allowlist (Sauber für Technitium !-URL)
 	allowOut, _ := os.Create(allowListFile)
 	allowOut.WriteString("# Technitium Allow List\n")
 	for _, dom := range whitelistOrder {
@@ -155,13 +181,12 @@ func main() {
 	}
 	allowOut.Close()
 
-	// Versionierung
 	timestamp := time.Now().Format("2006-01-02 15:04")
 	finalCount := len(finalList)
 	duration := time.Since(startTime)
 
 	vFile, _ := os.Create(versionFile)
-	vFile.WriteString(fmt.Sprintf("Last Update: %s\nTotal: %d\nWhitelist: %d\nEngine: Go", timestamp, finalCount, whitelistHitCount))
+	vFile.WriteString(fmt.Sprintf("Last Update: %s\nTotal: %d\nWhitelist: %d\nEngine: Go (Resty)", timestamp, finalCount, whitelistHitCount))
 	vFile.Close()
 
 	jsonFile, _ := os.Create("version.json")
@@ -170,7 +195,5 @@ func main() {
 
 	fmt.Println(strings.Repeat("-", 80))
 	fmt.Printf("ZUSAMMENFASSUNG:\n")
-	fmt.Printf("Zeit: %v | Blockliste: %d | Allowliste: %d | Whitelist-Treffer: %d\n", 
-		duration, finalCount, len(whitelistOrder), whitelistHitCount)
-	fmt.Println(strings.Repeat("-", 80))
+	fmt.Printf("Zeit: %v | Blockliste: %d | Whitelist-Treffer: %d\n", duration, finalCount, whitelistHitCount)
 }
