@@ -104,3 +104,6 @@ visa.com
 okta.com
 adobe.com
 zoom.us
+
+# --- CISCO ---
+cisco.com

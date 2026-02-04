@@ -19,9 +19,43 @@ const (
 	versionFile   = "version.txt"
 	whitelistFile = "whitelist.txt"
 	allowListFile = "allowlist.txt"
-	subThresh     = 10
+	subThresh     = 50 // Erhöht auf 50, um Overblocking/Ladeprobleme zu reduzieren
 	domainRegex   = `(?m)^(?:0\.0\.0\.0|127\.0\.0\.1)?\s*([a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+)`
 )
+
+// cleanAndLoadWhitelist räumt die Whitelist auf und lädt sie in eine Map
+func cleanAndLoadWhitelist(filename string) (map[string]bool, []string) {
+	uniqueDomains := make(map[string]bool)
+	var order []string
+
+	file, err := os.Open(filename)
+	if err != nil {
+		return uniqueDomains, order
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		line = strings.Split(line, "#")[0] // Kommentare entfernen
+		line = strings.TrimSpace(line)
+
+		if line != "" {
+			dom := strings.ToLower(line)
+			if !uniqueDomains[dom] {
+				uniqueDomains[dom] = true
+				order = append(order, dom)
+			}
+		}
+	}
+
+	// Whitelist alphabetisch sortieren
+	sort.Strings(order)
+	// Die Datei direkt sauber wieder speichern
+	os.WriteFile(filename, []byte(strings.Join(order, "\n")+"\n"), 0644)
+
+	return uniqueDomains, order
+}
 
 func isValidDomain(domain string) bool {
 	if !strings.Contains(domain, ".") {
@@ -38,6 +72,7 @@ func isWhitelisted(domain string, whitelist map[string]bool) bool {
 		return true
 	}
 	parts := strings.Split(domain, ".")
+	// Prüft hierarchisch (z.B. für cdn.example.com auch example.com)
 	for i := 1; i < len(parts)-1; i++ {
 		parent := strings.Join(parts[i:], ".")
 		if whitelist[parent] {
@@ -57,28 +92,14 @@ func getParent(domain string) string {
 
 func main() {
 	startTime := time.Now()
-	fmt.Println("--- GO OPTIMIZER START (Parallel + Resty + TLD-Check) ---")
+	fmt.Println("--- GO OPTIMIZER START (Parallel + Auto-Cleanup) ---")
 
-	// 0. Whitelist laden
-	whitelist := make(map[string]bool)
-	var whitelistOrder []string
+	// 0. Whitelist laden & säubern
+	whitelist, whitelistOrder := cleanAndLoadWhitelist(whitelistFile)
 	var whitelistHitCount int
 	var hitMu sync.Mutex
 
-	if f, err := os.Open(whitelistFile); err == nil {
-		scanner := bufio.NewScanner(f)
-		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
-			if line != "" && !strings.HasPrefix(line, "#") {
-				dom := strings.ToLower(line)
-				if !whitelist[dom] {
-					whitelist[dom] = true
-					whitelistOrder = append(whitelistOrder, dom)
-				}
-			}
-		}
-		f.Close()
-	}
+	fmt.Printf("-> %d Domains in Whitelist (bereinigt).\n\n", len(whitelist))
 
 	// 1. Quellen einlesen
 	f, err := os.Open(sourcesFile)
@@ -101,7 +122,6 @@ func main() {
 	var wg sync.WaitGroup
 	re := regexp.MustCompile(domainRegex)
 
-	// Resty Client mit 3 Retries und Timeout
 	client := resty.New().SetTimeout(45 * time.Second).SetRetryCount(3)
 
 	fmt.Printf("%-8s | %-10s | %s\n", "STATUS", "NEUE", "QUELLE")
@@ -144,7 +164,7 @@ func main() {
 	}
 	wg.Wait()
 
-	// 2. Aggregation
+	// 2. Aggregation (Subdomain-Konsolidierung)
 	parentCounts := make(map[string]int)
 	for dom := range allDomains {
 		parentCounts[getParent(dom)]++
