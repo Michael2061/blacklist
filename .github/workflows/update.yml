@@ -2,8 +2,8 @@ name: Daily Blocklist Update
 
 on:
   schedule:
-    - cron: '0 3 * * *' 
-  workflow_dispatch: 
+    - cron: "0 3 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -18,27 +18,38 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
-          cache: true # Nutzt die go.sum für schnelles Laden
-          cache-dependency-path: go.sum
+          go-version: "1.21"
+          cache: false # Wir machen es manuell für mehr Stabilität
 
-      - name: Verify Dependencies
-        run: go mod download
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          # Der Key ändert sich, wenn die go.sum sich ändert
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Install Dependencies
+        # "go mod tidy" ist oft sauberer als "download",
+        # da es die go.sum aufräumt
+        run: go mod tidy
 
       - name: Run Go Optimizer
         run: go run merge.go
-
       - name: Commit and Push changes
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
+
           touch version.txt
           OLD_COUNT=$(git show HEAD:version.txt 2>/dev/null | grep "Total:" | grep -oP '\d+' || echo "0")
           NEW_COUNT=$(grep "Total:" version.txt | grep -oP '\d+' || echo "0")
-          
+
           git add blocklist.txt version.txt version.json sources.txt allowlist.txt
-          
+
           if git diff --cached --quiet; then
             echo "Keine Änderungen gefunden."
           else
