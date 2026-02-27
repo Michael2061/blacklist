@@ -5,6 +5,9 @@ on:
     - cron: '0 0 * * *' # Täglich um Mitternacht
   workflow_dispatch: # Ermöglicht manuelles Starten
 
+permissions:
+  contents: write # Erlaubt der Action, Dateien im Repo zu speichern
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,15 +19,20 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
-          # cache: true  <-- Falls das hier steht, setze es auf false oder lösche die Zeile
+          cache: false # Schaltet das problematische Caching explizit aus
 
       - name: Run Optimizer
         run: go run merge.go
 
       - name: Commit and Push
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
           git add blocklist.txt allowlist.txt version.txt version.json
-          git commit -m "Auto-update lists [$(date +'%Y-%m-%d %H:%M')]" || exit 0
-          git push
+          # Prüfen, ob es Änderungen gibt, um leere Commits/Fehler zu vermeiden
+          if git diff --cached --quiet; then
+            echo "Keine Änderungen an den Listen gefunden."
+          else
+            git commit -m "Auto-update lists [$(date +'%Y-%m-%d %H:%M')]"
+            git push
+          fi
