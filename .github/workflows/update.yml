@@ -5,25 +5,30 @@ on:
     - cron: '0 3 * * *' 
   workflow_dispatch: 
 
+# Hier definieren wir die Variable global für das ganze Dokument
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 permissions:
   contents: write
-
-env:
-  # Hiermit verschwindet die Warnung und du nutzt sofort das neue Node.js 24
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4 # Bleibt v4, nutzt aber jetzt Node 24 durch env
+        uses: actions/checkout@v4
+        # Wir können die Variable hier auch nochmal pro Schritt erzwingen
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
-          cache: false # Sicherste Methode gegen tar-Fehler
+          cache: false
+        env:
+          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
       - name: Verify and Install Dependencies
         run: |
@@ -37,13 +42,11 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          
-          # Fügt alle relevanten Dateien hinzu
           git add whitelist.txt blocklist.txt version.txt version.json sources.txt allowlist.txt
           
           if git diff --cached --quiet; then
-            echo "Keine Änderungen gefunden."
+            echo "Keine Änderungen."
           else
-            git commit -m "Auto-Update: Blocklist & Whitelist Cleanup (Node24/Go)"
+            git commit -m "Update: DNS List Sync"
             git push
           fi
