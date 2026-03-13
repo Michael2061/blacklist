@@ -1,38 +1,49 @@
-name: Update Blocklist
+name: Daily Blocklist Update
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Täglich um Mitternacht
-  workflow_dispatch: # Ermöglicht manuelles Starten
+    - cron: '0 3 * * *' 
+  workflow_dispatch: 
 
 permissions:
-  contents: write # Erlaubt der Action, Dateien im Repo zu speichern
+  contents: write
+
+env:
+  # Hiermit verschwindet die Warnung und du nutzt sofort das neue Node.js 24
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # Bleibt v4, nutzt aber jetzt Node 24 durch env
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
-          cache: false # Schaltet das problematische Caching explizit aus
+          cache: false # Sicherste Methode gegen tar-Fehler
 
-      - name: Run Optimizer
+      - name: Verify and Install Dependencies
+        run: |
+          go mod tidy
+          go mod download
+
+      - name: Run Go Optimizer
         run: go run merge.go
 
-      - name: Commit and Push
+      - name: Commit and Push changes
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add blocklist.txt allowlist.txt version.txt version.json
-          # Prüfen, ob es Änderungen gibt, um leere Commits/Fehler zu vermeiden
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          
+          # Fügt alle relevanten Dateien hinzu
+          git add whitelist.txt blocklist.txt version.txt version.json sources.txt allowlist.txt
+          
           if git diff --cached --quiet; then
-            echo "Keine Änderungen an den Listen gefunden."
+            echo "Keine Änderungen gefunden."
           else
-            git commit -m "Auto-update lists [$(date +'%Y-%m-%d %H:%M')]"
+            git commit -m "Auto-Update: Blocklist & Whitelist Cleanup (Node24/Go)"
             git push
           fi
