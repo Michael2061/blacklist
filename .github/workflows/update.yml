@@ -5,7 +5,7 @@ on:
     - cron: '0 3 * * *' 
   workflow_dispatch: 
 
-# Hier definieren wir die Variable global für das ganze Dokument
+# GLOBAL: Das gilt für ALLES in diesem File
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
@@ -15,20 +15,21 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # Wir können es auch hier für den gesamten Job erzwingen
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+      
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        # Wir können die Variable hier auch nochmal pro Schritt erzwingen
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+        with:
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.21'
           cache: false
-        env:
-          FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
       - name: Verify and Install Dependencies
         run: |
@@ -42,11 +43,12 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          
           git add whitelist.txt blocklist.txt version.txt version.json sources.txt allowlist.txt
           
           if git diff --cached --quiet; then
-            echo "Keine Änderungen."
+            echo "Keine Änderungen gefunden."
           else
-            git commit -m "Update: DNS List Sync"
+            git commit -m "Auto-Update: DNS List (Node24 Sync)"
             git push
           fi
