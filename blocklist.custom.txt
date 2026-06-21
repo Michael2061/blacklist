@@ -1,0 +1,5 @@
+# Eigene Domains die immer geblockt werden sollen
+# Eine Domain pro Zeile, # für Kommentare
+# Beispiel:
+# example.com
+# tracking.example.net
